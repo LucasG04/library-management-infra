@@ -1,0 +1,23 @@
+# Template for the frontend Argo CD application
+# Replace STAGE with the environment name (e.g. s, p)
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: library-management-frontend
+spec:
+  destination:
+    name: in-cluster
+    namespace: STAGE-library
+  source:
+    path: charts/frontend
+    repoURL: https://github.com/LucasG04/library-management-infra.git
+    targetRevision: main
+    helm:
+      valueFiles:
+        - ../../environments/STAGE-values.yaml
+  project: default
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: false
