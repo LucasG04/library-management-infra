@@ -1,0 +1,9 @@
+# global values for production environment
+
+global:
+  frontend:
+    imageTag: 0.0.0
+    imagePullPolicy: IfNotPresent
+  backend:
+    imageTag: 0.0.0
+    imagePullPolicy: IfNotPresent

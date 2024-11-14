@@ -1,0 +1,9 @@
+# global values for staging environment
+
+global:
+  frontend:
+    imageTag: main
+    imagePullPolicy: Always
+  backend:
+    imageTag: main
+    imagePullPolicy: Always
