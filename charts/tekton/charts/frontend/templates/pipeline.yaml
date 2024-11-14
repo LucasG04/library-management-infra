@@ -28,6 +28,8 @@ spec:
     - name: npm-install
       taskRef:
         name: npm-exec
+      runAfter:
+        - clone-repo
       workspaces:
         - name: source
           workspace: source-pvc
