@@ -1,0 +1,25 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: git-clone
+  labels:
+    {{- include "tasks.labels" . | nindent 4 }}
+spec:
+  params:
+    - name: url
+      type: string
+      description: The URL of the Git repository to clone
+    - name: branch
+      type: string
+      description: Branch to checkout
+  workspaces:
+    - name: source
+      description: The workspace where the repository will be cloned to.
+  steps:
+    - name: clone
+      image: alpine/git
+      script: |
+        #!/bin/sh
+        set -e
+        # clone with branch
+        git clone --branch $(params.branch) $(params.url) $(workspaces.source.path)

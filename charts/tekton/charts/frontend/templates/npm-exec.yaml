@@ -1,0 +1,30 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: npm-exec
+  labels:
+    {{- include "frontend.labels" . | nindent 4 }}
+spec:
+  params:
+    - name: npm-command
+      type: string
+      description: The npm command to run
+  workspaces:
+    - name: source
+      description: The workspace containing the npm project
+    - name: cache
+      description: The workspace for the npm cache
+      optional: true
+  steps:
+      - name: run-npm-command
+        image: node:22
+        workingDir: $(workspaces.source.path)
+        script: |
+          #!/bin/sh
+          # check if the cache is mounted
+          if [ -d ${WORKSPACE_CACHE} ]; then
+            echo "Cache found, using it"
+            npm config set cache ${WORKSPACE_CACHE}/.npm
+          fi
+          
+          npm ${params.npm-command}

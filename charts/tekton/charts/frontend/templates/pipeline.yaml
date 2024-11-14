@@ -1,0 +1,67 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: {{ include "frontend.name" . }}
+  labels:
+    {{- include "frontend.labels" . | nindent 4 }}
+spec:
+  workspaces:
+    - name: source-pvc
+    - name: cache-pvc
+  tasks:
+    - name: clone-repo
+      taskRef:
+        name: git-clone
+      workspaces:
+        - name: source
+          workspace: source-pvc
+      params:
+        - name: url
+          value: $(params.git-url)
+        - name: revision
+          value: $(params.git-revision)
+    - name: npm-install
+      taskRef:
+        name: npm-exec
+      workspaces:
+        - name: source
+          workspace: source-pvc
+        - name: cache
+          workspace: cache-pvc
+      params:
+        - name: script
+          value: install
+    - name: npm-lint
+      taskRef:
+        name: npm-exec
+      runAfter:
+        - npm-install
+      workspaces:
+        - name: source
+          workspace: source-pvc
+      params:
+        - name: script
+          value: run lint
+    - name: npm-test
+      taskRef:
+        name: npm-exec
+      runAfter:
+        - npm-install
+      workspaces:
+        - name: source
+          workspace: source-pvc
+      params:
+        - name: script
+          value: run test
+    - name: npm-build
+      taskRef:
+        name: npm-exec
+      runAfter:
+        - npm-lint
+        - npm-test
+      workspaces:
+        - name: source
+          workspace: source-pvc
+      params:
+        - name: script
+          value: run build
