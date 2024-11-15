@@ -5,6 +5,8 @@ metadata:
 spec:
   accessModes:
     - ReadWriteMany
+  storageClassName: ""
   resources:
     requests:
       storage: 4Gi
+  volumeName: shared-pv
