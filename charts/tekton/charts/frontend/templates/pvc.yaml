@@ -11,16 +11,16 @@ spec:
       storage: 4Gi
   volumeName: {{ include "frontend.name" . }}-cache
 ---
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: {{ include "frontend.name" . }}-cache
-spec:
-  capacity:
-    storage: 4Gi
-  accessModes:
-    - ReadWriteMany
-  storageClassName: ""
-  hostPath:
-    path: /mnt/data
-  persistentVolumeReclaimPolicy: Retain
+# apiVersion: v1
+# kind: PersistentVolume
+# metadata:
+#   name: {{ include "frontend.name" . }}-cache
+# spec:
+#   capacity:
+#     storage: 4Gi
+#   accessModes:
+#     - ReadWriteMany
+#   storageClassName: ""
+#   hostPath:
+#     path: /mnt/data
+#   persistentVolumeReclaimPolicy: Retain
