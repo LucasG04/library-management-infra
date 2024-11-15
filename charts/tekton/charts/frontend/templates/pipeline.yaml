@@ -37,7 +37,7 @@ spec:
           workspace: cache-pvc
       params:
         - name: command
-          value: install
+          value: ci
     - name: npm-lint
       taskRef:
         name: npm-exec
