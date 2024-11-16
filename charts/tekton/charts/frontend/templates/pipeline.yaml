@@ -61,7 +61,7 @@ spec:
         - name: image
           value: timbru31/node-chrome:22-slim
         - name: command
-          value: run test
+          value: run test:ci
     - name: npm-build
       taskRef:
         name: npm-exec
