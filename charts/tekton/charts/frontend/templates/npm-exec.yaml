@@ -6,6 +6,10 @@ metadata:
     {{- include "frontend.labels" . | nindent 4 }}
 spec:
   params:
+    - name: image
+      type: string
+      description: The Docker image to use
+      default: node:22
     - name: command
       type: string
       description: The npm command to run
@@ -17,7 +21,7 @@ spec:
       optional: true
   steps:
       - name: run-npm-command
-        image: node:22
+        image: $(params.image)
         workingDir: $(workspaces.source.path)
         env:
           - name: CI

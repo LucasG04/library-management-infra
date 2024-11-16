@@ -58,6 +58,8 @@ spec:
         - name: source
           workspace: source-pvc
       params:
+        - name: image
+          value: timbru31/node-chrome:22-slim
         - name: command
           value: run test
     - name: npm-build
