@@ -1,0 +1,6 @@
+# Values for the frontend pipeline chart
+
+image:
+  name: lucasg04/library-management-frontend
+
+dockerConfigSecret: docker-hub-secret

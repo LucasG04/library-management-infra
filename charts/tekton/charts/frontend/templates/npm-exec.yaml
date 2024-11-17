@@ -6,11 +6,11 @@ metadata:
     {{- include "frontend.labels" . | nindent 4 }}
 spec:
   params:
-    - name: image
+    - name: IMAGE
       type: string
       description: The Docker image to use
       default: node:22
-    - name: command
+    - name: COMMAND
       type: string
       description: The npm command to run
   workspaces:
@@ -21,7 +21,7 @@ spec:
       optional: true
   steps:
       - name: run-npm-command
-        image: $(params.image)
+        image: $(params.IMAGE)
         workingDir: $(workspaces.source.path)
         env:
           - name: CI
@@ -29,9 +29,9 @@ spec:
         script: |
           #!/bin/sh
           # check if the cache is mounted
-          if [ -d ${WORKSPACE_CACHE} ]; then
+          if [ -d ${WORKSPACE_CACHE}/.npm ]; then
             echo "Cache found, using it..."
             npm config set cache ${WORKSPACE_CACHE}/.npm
           fi
           
-          npm $(params.command)
+          npm $(params.COMMAND)

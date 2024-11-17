@@ -6,13 +6,16 @@ metadata:
     {{- include "frontend.labels" . | nindent 4 }}
 spec:
   params:
-    - name: git-url
+    - name: GIT_URL
       description: The URL of the git repository
-    - name: git-branch
+    - name: GIT_BRANCH
       description: The git branch to clone
   workspaces:
     - name: source-pvc
     - name: cache-pvc
+    - name: docker-config-secret
+      secret:
+        secretName: {{ .Values.dockerConfigSecret }}
   tasks:
     - name: clone-repo
       taskRef:
@@ -21,10 +24,10 @@ spec:
         - name: source
           workspace: source-pvc
       params:
-        - name: url
-          value: $(params.git-url)
-        - name: branch
-          value: $(params.git-branch)
+        - name: URL
+          value: $(params.GIT_URL)
+        - name: BRANCH
+          value: $(params.GIT_BRANCH)
     - name: npm-install
       taskRef:
         name: npm-exec
@@ -36,7 +39,7 @@ spec:
         - name: cache
           workspace: cache-pvc
       params:
-        - name: command
+        - name: COMMAND
           value: ci
     - name: npm-lint
       taskRef:
@@ -47,7 +50,7 @@ spec:
         - name: source
           workspace: source-pvc
       params:
-        - name: command
+        - name: COMMAND
           value: run lint
     - name: npm-test
       taskRef:
@@ -58,9 +61,9 @@ spec:
         - name: source
           workspace: source-pvc
       params:
-        - name: image
+        - name: IMAGE
           value: timbru31/node-chrome:22-slim
-        - name: command
+        - name: COMMAND
           value: run test:ci
     - name: npm-build
       taskRef:
@@ -72,5 +75,20 @@ spec:
         - name: source
           workspace: source-pvc
       params:
-        - name: command
+        - name: COMMAND
           value: run build
+    - name: build-push-image
+      taskRef:
+        name: kaniko
+      runAfter:
+        - npm-build
+      workspaces:
+        - name: source
+          workspace: source-pvc
+        - name: dockerconfig
+          workspace: docker-config-secret
+      params:
+        - name: IMAGE_NAME
+          value: {{ .Values.image.name }}
+        - name: IMAGE_TAG
+          value: $(params.GIT_BRANCH)

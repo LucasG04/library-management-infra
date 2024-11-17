@@ -6,10 +6,10 @@ metadata:
     {{- include "tasks.labels" . | nindent 4 }}
 spec:
   params:
-    - name: url
+    - name: URL
       type: string
       description: The URL of the Git repository to clone
-    - name: branch
+    - name: BRANCH
       type: string
       description: Branch to checkout
   workspaces:
@@ -22,4 +22,4 @@ spec:
         #!/bin/sh
         set -e
         # clone with branch
-        git clone --branch $(params.branch) $(params.url) $(workspaces.source.path)
+        git clone --branch $(params.BRANCH) $(params.URL) $(workspaces.source.path)
