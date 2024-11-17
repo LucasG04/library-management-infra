@@ -14,8 +14,6 @@ spec:
     - name: source-pvc
     - name: cache-pvc
     - name: docker-config-secret
-      secret:
-        secretName: {{ .Values.dockerConfigSecret }}
   tasks:
     - name: clone-repo
       taskRef:
