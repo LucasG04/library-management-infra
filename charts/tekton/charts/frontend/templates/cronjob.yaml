@@ -43,24 +43,26 @@ spec:
                   if [ -f ${BASEDIR}/${REPONAME_CLEAN}.sha256 ]; then
                       _prev_revision=$(cat ${BASEDIR}/${REPONAME_CLEAN}.sha256)
                   else
-                      echo ${_current_revision} >${BASEDIR}/${REPONAME_CLEAN}.sha256
+                      echo -n ${_current_revision} > ${BASEDIR}/${REPONAME_CLEAN}.sha256
                   fi
-
-                  # Generating JSON data
-                  _jsondata=$(cat <<EOF
-                  {
-                      "revision": "${_current_revision}",
-                      "repository_url": "${REPOURL}",
-                      "repository_name": "${REPONAME}",
-                      "repository_branch": "${REPOBRANCH}"
-                  }
-                  EOF
-                  )
 
                   # Check if there are any changes by comparing previous and current revisions.
                   # If there are changes, trigger a new pipeline using curl and json data.
                   if [ "${_current_revision}" != "${_prev_revision}" ]; then
-                      echo ${_current_revision} >${BASEDIR}/${REPONAME_CLEAN}.sha256
+                      echo "Changes detected"
+                      echo -n ${_current_revision} > ${BASEDIR}/${REPONAME_CLEAN}.sha256
+
+                      # Generating JSON data
+                      _jsondata=$(cat <<EOF
+                      {
+                          "revision": "${_current_revision}",
+                          "repository_url": "${REPOURL}",
+                          "repository_name": "${REPONAME}",
+                          "repository_branch": "${REPOBRANCH}"
+                      }
+                      EOF
+                      )
+
                       curl -s -X POST -H 'Content-Type: application/json' -d "${_jsondata}" ${EVENTLISTENER_SVC_URL}
                   else
                       echo "No changes"
