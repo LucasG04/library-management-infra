@@ -98,7 +98,8 @@ spec:
                           -H 'Content-Type: application/json' \
                           -d "${_jsondata}" "${EVENTLISTENER_SVC_URL}")
 
-                      if [[ ${response} =~ ^2 ]]; then
+                      # Check response if http code is not 2xx
+                      if [[ ${response} != 2* ]]; then
                           log "ERROR" "Failed to trigger pipeline. HTTP status code: ${response}"
                           exit 1
                       fi
