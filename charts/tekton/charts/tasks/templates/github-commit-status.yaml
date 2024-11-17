@@ -59,8 +59,8 @@ spec:
         - name: GITHUB_TOKEN
           valueFrom:
             secretKeyRef:
-              key: $(params.GITHUB_TOKEN_SECRET_NAME)
-              name: $(params.GITHUB_TOKEN_SECRET_KEY)
+              name: $(params.GITHUB_TOKEN_SECRET_NAME)
+              key: $(params.GITHUB_TOKEN_SECRET_KEY)
       script: |
         #!/usr/bin/env node
 
