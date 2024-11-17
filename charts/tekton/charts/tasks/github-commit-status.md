@@ -5,5 +5,5 @@ To use the `github-commit-status` task, you need a Kubernetes secret containing 
 You can create the secret using the following command:
 
 ```sh
-kubectl create secret generic github-commit-status-token --from-literal=token="MY_TOKEN"
+kubectl create secret generic github-commit-status-token --from-literal=token="MY_TOKEN" -n s-library
 ```

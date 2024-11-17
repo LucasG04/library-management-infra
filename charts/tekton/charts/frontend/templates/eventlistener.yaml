@@ -1,0 +1,14 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: EventListener
+metadata:
+  name: {{ include "frontend.name" . }}
+  labels:
+    {{- include "frontend.labels" . | nindent 4 }}
+spec:
+  serviceAccountName: pipeline
+  triggers:
+    - name: {{ include "frontend.name" . }}
+      bindings:
+        - ref: {{ include "frontend.name" . }}
+      template:
+        ref: {{ include "frontend.name" . }}
