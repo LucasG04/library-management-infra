@@ -1,0 +1,23 @@
+# Template for the common Argo CD application
+# Replace STAGE with the environment name (e.g. s, p)
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: common
+spec:
+  destination:
+    name: in-cluster
+    namespace: STAGE-library
+  source:
+    path: charts/common
+    repoURL: https://github.com/LucasG04/library-management-infra.git
+    targetRevision: main
+    helm:
+      valueFiles:
+        - ../../environments/STAGE-values.yaml
+  project: default
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: false
