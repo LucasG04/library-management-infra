@@ -33,7 +33,7 @@ spec:
         - clone-repo
       params:
         - name: REPO_FULL_NAME
-          value: {{ .Values.github.repository }}
+          value: $(params.GIT_URL)
         - name: SHA
           value: $(tasks.clone-repo.results.CLONED_COMMIT_SHA)
         - name: GITHUB_TOKEN_SECRET_NAME
@@ -120,7 +120,7 @@ spec:
           values: ["Failed"]
       params:
         - name: REPO_FULL_NAME
-          value: {{ .Values.github.repository }}
+          value: $(params.GIT_URL)
         - name: SHA
           value: $(tasks.clone-repo.results.CLONED_COMMIT_SHA)
         - name: GITHUB_TOKEN_SECRET_NAME
@@ -142,7 +142,7 @@ spec:
           values: ["Failed"]
       params:
         - name: REPO_FULL_NAME
-          value: {{ .Values.github.repository }}
+          value: $(params.GIT_URL)
         - name: SHA
           value: $(tasks.clone-repo.results.CLONED_COMMIT_SHA)
         - name: GITHUB_TOKEN_SECRET_NAME
