@@ -1,0 +1,126 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: github-commit-status
+  labels:
+    {{- include "tasks.labels" . | nindent 4 }}
+spec:
+  description: >-
+    This task sets the CI job status on GitHub ("api.github.com") commits with a specified state.
+  params:
+  - name: REPO_FULL_NAME
+    description: |
+      The GitHub repository full name, e.g.: tektoncd/catalog
+    type: string
+
+  - name: SHA
+    description: Commit SHA to set the status for.
+    type: string
+
+  - name: GITHUB_TOKEN_SECRET_NAME
+    description: |
+      The name of the kubernetes secret that contains the GitHub token
+    type: string
+
+  - name: GITHUB_TOKEN_SECRET_KEY
+    description: |
+      The key within the kubernetes secret that contains the GitHub token
+    type: string
+
+  - name: TARGET_URL
+    description: |
+      The target URL to associate with this status. This URL will be linked
+      from the GitHub UI to allow users to easily see the source of the
+      status.
+    type: string
+
+  - name: DESCRIPTION
+    description: A short description of the status.
+    type: string
+
+  - name: CONTEXT
+    description: |
+      The GitHub context, A string label to differentiate this status from
+      the status of other systems. ie: "ci/tekton"
+    default: "ci/tekton"
+    type: string
+
+  - name: STATE
+    description: |
+      The state of the status. Can be one of the following `error`,
+      `failure`, `pending`, or `success`.
+    type: string
+
+  steps:
+    - name: set-status
+      image: node:22
+      env:
+        - name: GITHUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              key: $(params.GITHUB_TOKEN_SECRET_NAME)
+              name: $(params.GITHUB_TOKEN_SECRET_KEY)
+      script: |
+        #!/usr/bin/env node
+
+        const https = require('https');
+
+        // Construct the status URL
+        const statusUrl = `/repos/$(params.REPO_FULL_NAME)/statuses/$(params.SHA)`;
+
+        // Prepare the data payload
+        const data = JSON.stringify({
+          state: "$(params.STATE)",
+          target_url: "$(params.TARGET_URL)",
+          description: "$(params.DESCRIPTION)",
+          context: "$(params.CONTEXT)"
+        });
+
+        console.log("Body for API request:", data);
+
+        // Set up the authorization header
+        const authHeader = `Bearer ${process.env.GITHUB_TOKEN}`;
+
+        // Configure the HTTPS request options
+        const options = {
+          hostname: "api.github.com",
+          port: 443,
+          path: statusUrl,
+          method: 'POST',
+          headers: {
+            'Authorization': authHeader,
+            'Accept': 'application/vnd.github+json',
+            'Content-Type': 'application/json',
+            'Content-Length': data.length,
+            'User-Agent': 'Tekton CI'
+          }
+        };
+
+        // Make the HTTPS request
+        const req = https.request(options, (res) => {
+          let responseData = '';
+
+          res.on('data', (chunk) => {
+            responseData += chunk;
+          });
+
+          res.on('end', () => {
+            if (!String(res.statusCode).startsWith('2')) {
+              console.error(`Error: ${res.statusCode}`);
+              console.error(responseData);
+              process.exit(1);
+            } else {
+              console.log(`GitHub status '$(params.STATE)' has been set on $(params.REPO_FULL_NAME)#$(params.SHA)`);
+            }
+          });
+        });
+
+        req.on('error', (error) => {
+          console.error(error);
+          process.exit(1);
+        });
+
+        // Send the request with the data payload
+        req.write(data);
+        req.end();

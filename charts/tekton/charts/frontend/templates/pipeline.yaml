@@ -26,6 +26,26 @@ spec:
           value: $(params.GIT_URL)
         - name: BRANCH
           value: $(params.GIT_BRANCH)
+    - name: set-pending-commit-status
+      taskRef:
+        name: github-commit-status
+      runAfter:
+        - clone-repo
+      params:
+        - name: REPO_FULL_NAME
+          value: {{ .Values.github.repository }}
+        - name: SHA
+          value: $(tasks.clone-repo.results.CLONED_COMMIT_SHA)
+        - name: GITHUB_TOKEN_SECRET_NAME
+          value: {{ .Values.gitHubCommitStatusSecret.name }}
+        - name: GITHUB_TOKEN_SECRET_KEY
+          value: {{ .Values.gitHubCommitStatusSecret.key }}
+        - name: TARGET_URL
+          value: http://tekton/dashboard # placeholder
+        - name: DESCRIPTION
+          value: "CI started for $(context.pipelineRun.name)"
+        - name: STATE
+          value: pending
     - name: npm-install
       taskRef:
         name: npm-exec
@@ -90,3 +110,48 @@ spec:
           value: {{ .Values.image.name }}
         - name: IMAGE_TAG
           value: $(params.GIT_BRANCH)
+  finally:
+    - name: set-success-commit-status
+      taskRef:
+        name: github-commit-status
+      when:
+        - input: "$(tasks.status)"
+          operator: notin
+          values: ["Failed"]
+      params:
+        - name: REPO_FULL_NAME
+          value: {{ .Values.github.repository }}
+        - name: SHA
+          value: $(tasks.clone-repo.results.CLONED_COMMIT_SHA)
+        - name: GITHUB_TOKEN_SECRET_NAME
+          value: {{ .Values.gitHubCommitStatusSecret.name }}
+        - name: GITHUB_TOKEN_SECRET_KEY
+          value: {{ .Values.gitHubCommitStatusSecret.key }}
+        - name: TARGET_URL
+          value: http://tekton/dashboard # placeholder
+        - name: DESCRIPTION
+          value: "CI success for $(context.pipelineRun.name)"
+        - name: STATE
+          value: success
+    - name: set-failure-commit-status
+      taskRef:
+        name: github-commit-status
+      when:
+        - input: "$(tasks.status)"
+          operator: in
+          values: ["Failed"]
+      params:
+        - name: REPO_FULL_NAME
+          value: {{ .Values.github.repository }}
+        - name: SHA
+          value: $(tasks.clone-repo.results.CLONED_COMMIT_SHA)
+        - name: GITHUB_TOKEN_SECRET_NAME
+          value: {{ .Values.gitHubCommitStatusSecret.name }}
+        - name: GITHUB_TOKEN_SECRET_KEY
+          value: {{ .Values.gitHubCommitStatusSecret.key }}
+        - name: TARGET_URL
+          value: http://tekton/dashboard # placeholder
+        - name: DESCRIPTION
+          value: "CI failure for $(context.pipelineRun.name)"
+        - name: STATE
+          value: failure

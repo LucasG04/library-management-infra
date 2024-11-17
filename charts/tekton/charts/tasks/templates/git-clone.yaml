@@ -15,11 +15,23 @@ spec:
   workspaces:
     - name: source
       description: The workspace where the repository will be cloned to.
+  results:
+    - name: CLONED_COMMIT_SHA
+      description: The commit hash of the HEAD of the branch
+    - name: CLONED_COMMIT_SHA_SHORT
+      description: The short commit hash of the HEAD of the branch
   steps:
     - name: clone
       image: alpine/git
+      workingDir: $(workspaces.source.path)
       script: |
         #!/bin/sh
         set -e
-        # clone with branch
-        git clone --branch $(params.BRANCH) $(params.URL) $(workspaces.source.path)
+
+        # clone with branch to the source workspace
+        git clone --branch $(params.BRANCH) $(params.URL) .
+
+        # get the commit sha and write it to the result
+        git rev-parse HEAD > $(results.CLONED_COMMIT_SHA.path)
+        git rev-parse --short HEAD > $(results.CLONED_COMMIT_SHA_SHORT.path)
+

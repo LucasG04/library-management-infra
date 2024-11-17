@@ -4,3 +4,6 @@ image:
   name: lucasg04/library-management-frontend
 
 dockerConfigSecret: docker-hub-secret
+gitHubCommitStatusSecret:
+  name: github-status-secret
+  key: token
