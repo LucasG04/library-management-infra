@@ -7,6 +7,6 @@ metadata:
 spec:
   params:
     - name: GIT_URL
-      value: "$(body.git_url)"
+      value: "$(body.repository_url)"
     - name: GIT_BRANCH
-      value: "$(body.git_branch)"
+      value: "$(body.repository_branch)"

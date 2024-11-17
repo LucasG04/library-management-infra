@@ -2,8 +2,10 @@
 
 global:
   frontend:
+    ciBranch: main
     imageTag: main
     imagePullPolicy: Always
   backend:
+    ciBranch: main
     imageTag: main
     imagePullPolicy: Always

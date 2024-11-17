@@ -1,0 +1,84 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "frontend.name" . }}-polling
+  labels:
+    {{- include "frontend.labels" . | nindent 4 }}
+spec:
+  schedule: "*/1 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: polling-job
+              volumeMounts:
+                - name: polledrepos
+                  mountPath: /repos
+              image: registry.redhat.io/rhel8/toolbox:latest
+              env:
+                - name: REPOURL
+                  value: {{ .Values.repository.cloneUrl }}
+                - name: REPONAME
+                  value: {{ .Values.repository.fullName }}
+                - name: REPOBRANCH
+                  value: {{ .Values.global.frontend.ciBranch }}
+                - name: EVENTLISTENER_SVC_URL
+                  value: {{ include "frontend.name" . }}-el.{{ .Release.Namespace }}.svc.cluster.local
+              command:
+                - /bin/bash
+              args:
+                - -c
+                - |
+                  set -eu
+
+                  BASEDIR="/repos"
+
+                  # Revision initialization
+                  _current_revision=$(git ls-remote --heads ${REPOURL} ${REPOBRANCH} | awk '{print $1}')
+                  _prev_revision=${_current_revision}
+
+                  # If there is no existing previous revision data file, create a new revision data file with the current revision
+                  if [ -f ${BASEDIR}/${REPONAME}.sha256 ]; then
+                      _prev_revision=$(cat ${BASEDIR}/${REPONAME}.sha256)
+                  else
+                      echo ${_current_revision} >${BASEDIR}/${REPONAME}.sha256
+                  fi
+
+                  # Generating JSON data
+                  _jsondata=$(cat <<EOF
+                  {
+                      "revision": "${_current_revision}",
+                      "repository_url": "${REPOURL}",
+                      "repository_name": "${REPONAME}",
+                      "repository_branch": "${REPOBRANCH}"
+                  }
+                  EOF
+                  )
+
+                  # Check if there are any changes by comparing previous and current revisions.
+                  # If there are changes, trigger a new pipeline using curl and json data.
+                  if [ "${_current_revision}" != "${_prev_revision}" ]; then
+                      echo ${_current_revision} >${BASEDIR}/${REPONAME}.sha256
+                      curl -s -X POST -H 'Content-Type: application/json' -d "${_jsondata}" ${EVENTLISTENER_SVC_URL}
+                  else
+                      echo "No changes"
+                  fi
+          restartPolicy: Never
+          volumes:
+            - name: polledrepos
+              persistentVolumeClaim:
+                claimName: {{ include "frontend.name" . }}-polledrepos
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "frontend.name" . }}-polledrepos
+  labels:
+    {{- include "frontend.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
