@@ -15,7 +15,7 @@ spec:
               volumeMounts:
                 - name: polledrepos
                   mountPath: /repos
-              image: registry.redhat.io/rhel8/toolbox:latest
+              image: arunvelsriram/utils:latest
               env:
                 - name: REPOURL
                   value: {{ .Values.repository.cloneUrl }}
