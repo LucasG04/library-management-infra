@@ -5,5 +5,5 @@ image:
 
 dockerConfigSecret: docker-hub-secret
 gitHubCommitStatusSecret:
-  name: github-status-secret
+  name: github-commit-status-token
   key: token
