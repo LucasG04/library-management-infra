@@ -1,7 +1,7 @@
 apiVersion: triggers.tekton.dev/v1beta1
 kind: EventListener
 metadata:
-  name: {{ include "frontend.name" . }}-el
+  name: {{ include "frontend.name" . }} # Tekton will prefix this with "el-"
   labels:
     {{- include "frontend.labels" . | nindent 4 }}
 spec:

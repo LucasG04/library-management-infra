@@ -24,7 +24,7 @@ spec:
                 - name: REPOBRANCH
                   value: {{ .Values.global.frontend.ciBranch }}
                 - name: EVENTLISTENER_SVC_URL
-                  value: {{ include "frontend.name" . }}-el.{{ .Release.Namespace }}.svc.cluster.local
+                  value: el-{{ include "frontend.name" . }}.{{ .Release.Namespace }}.svc.cluster.local
               command:
                 - /bin/bash
               args:
