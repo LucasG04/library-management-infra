@@ -15,7 +15,7 @@ spec:
               volumeMounts:
                 - name: polledrepos
                   mountPath: /repos
-              image: arunvelsriram/utils:latest
+              image: rockylinux/rocky-toolbox:9
               env:
                 - name: REPOURL
                   value: {{ .Values.repository.cloneUrl }}
@@ -33,16 +33,17 @@ spec:
                   set -eu
 
                   BASEDIR="/repos"
+                  REPONAME_CLEAN=$(echo ${REPONAME} | sed 's/\//-/g')
 
                   # Revision initialization
                   _current_revision=$(git ls-remote --heads ${REPOURL} ${REPOBRANCH} | awk '{print $1}')
                   _prev_revision=${_current_revision}
 
                   # If there is no existing previous revision data file, create a new revision data file with the current revision
-                  if [ -f ${BASEDIR}/${REPONAME}.sha256 ]; then
-                      _prev_revision=$(cat ${BASEDIR}/${REPONAME}.sha256)
+                  if [ -f ${BASEDIR}/${REPONAME_CLEAN}.sha256 ]; then
+                      _prev_revision=$(cat ${BASEDIR}/${REPONAME_CLEAN}.sha256)
                   else
-                      echo ${_current_revision} >${BASEDIR}/${REPONAME}.sha256
+                      echo ${_current_revision} >${BASEDIR}/${REPONAME_CLEAN}.sha256
                   fi
 
                   # Generating JSON data
@@ -59,7 +60,7 @@ spec:
                   # Check if there are any changes by comparing previous and current revisions.
                   # If there are changes, trigger a new pipeline using curl and json data.
                   if [ "${_current_revision}" != "${_prev_revision}" ]; then
-                      echo ${_current_revision} >${BASEDIR}/${REPONAME}.sha256
+                      echo ${_current_revision} >${BASEDIR}/${REPONAME_CLEAN}.sha256
                       curl -s -X POST -H 'Content-Type: application/json' -d "${_jsondata}" ${EVENTLISTENER_SVC_URL}
                   else
                       echo "No changes"
