@@ -26,7 +26,7 @@ spec:
           value: $(params.GIT_URL)
         - name: BRANCH
           value: $(params.GIT_BRANCH)
-    - name: set-pending-commit-status
+    - name: commit-status-pending
       taskRef:
         name: github-commit-status
       runAfter:
@@ -111,7 +111,7 @@ spec:
         - name: IMAGE_TAG
           value: $(params.GIT_BRANCH)
   finally:
-    - name: set-success-commit-status
+    - name: commit-status-success
       taskRef:
         name: github-commit-status
       when:
@@ -133,7 +133,7 @@ spec:
           value: "CI success for $(context.pipelineRun.name)"
         - name: STATE
           value: success
-    - name: set-failure-commit-status
+    - name: commit-status-failure
       taskRef:
         name: github-commit-status
       when:
