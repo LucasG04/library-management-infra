@@ -53,15 +53,12 @@ spec:
                       echo -n ${_current_revision} > ${BASEDIR}/${REPONAME_CLEAN}.sha256
 
                       # Generating JSON data
-                      _jsondata=$(cat <<EOF
-                      {
-                          "revision": "${_current_revision}",
-                          "repository_url": "${REPOURL}",
-                          "repository_name": "${REPONAME}",
-                          "repository_branch": "${REPOBRANCH}"
-                      }
-                      EOF
-                      )
+                      _jsondata=$(printf '{
+                          "revision": "%s",
+                          "repository_url": "%s",
+                          "repository_name": "%s",
+                          "repository_branch": "%s"
+                      }' "${_current_revision}" "${REPOURL}" "${REPONAME}" "${REPOBRANCH}")
 
                       curl -s -X POST -H 'Content-Type: application/json' -d "${_jsondata}" ${EVENTLISTENER_SVC_URL}
                   else
