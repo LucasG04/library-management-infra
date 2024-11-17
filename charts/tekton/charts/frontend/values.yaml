@@ -3,6 +3,10 @@
 image:
   name: lucasg04/library-management-frontend
 
+repository:
+  cloneUrl: https://github.com/LucasG04/library-management-frontend.git
+  fullName: LucasG04/library-management-frontend
+
 dockerConfigSecret: docker-hub-secret
 gitHubCommitStatusSecret:
   name: github-commit-status-token

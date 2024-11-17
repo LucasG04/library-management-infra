@@ -32,6 +32,6 @@ spec:
         git clone --branch $(params.BRANCH) $(params.URL) .
 
         # get the commit sha and write it to the result
-        git rev-parse HEAD > $(results.CLONED_COMMIT_SHA.path)
-        git rev-parse --short HEAD > $(results.CLONED_COMMIT_SHA_SHORT.path)
+        echo -n "$(git rev-parse HEAD)" | tee $(results.CLONED_COMMIT_SHA.path)
+        echo -n "$(git rev-parse --short HEAD)" | tee $(results.CLONED_COMMIT_SHA_SHORT.path)
 
