@@ -24,7 +24,7 @@ spec:
                 - name: REPOBRANCH
                   value: {{ .Values.global.frontend.ciBranch }}
                 - name: EVENTLISTENER_SVC_URL
-                  value: el-{{ include "frontend.name" . }}.{{ .Release.Namespace }}.svc.cluster.local
+                  value: http://el-{{ include "frontend.name" . }}.{{ .Release.Namespace }}.svc.cluster.local:8080
               command:
                 - /bin/bash
               args:
@@ -98,7 +98,7 @@ spec:
                           -H 'Content-Type: application/json' \
                           -d "${_jsondata}" "${EVENTLISTENER_SVC_URL}")
 
-                      if [ "${response}" -ne 200 ]; then
+                      if [[ ${response} =~ ^2 ]]; then
                           log "ERROR" "Failed to trigger pipeline. HTTP status code: ${response}"
                           exit 1
                       fi
