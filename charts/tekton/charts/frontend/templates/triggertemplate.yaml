@@ -17,12 +17,15 @@ spec:
         generateName: {{ include "frontend.name" . }}-run-
       spec:
         pipelineRef:
-          name: frontend
+          name: {{ include "frontend.name" . }}
         params:
           - name: GIT_URL
             value: "$(tt.params.GIT_URL)"
           - name: GIT_BRANCH
             value: "$(tt.params.GIT_BRANCH)"
+        taskRunSpecs:
+          - pipelineTaskName: restart-deployment
+            serviceAccountName: {{ .Values.restartDeploymentRbacName }}
         workspaces:
           - name: source-pvc
             volumeClaimTemplate:
@@ -37,4 +40,4 @@ spec:
               claimName: {{ include "frontend.name" . }}-cache
           - name: docker-config-secret
             secret:
-              secretName: docker-hub-secret
+              secretName: {{ .Values.dockerConfigSecret }}

@@ -9,7 +9,7 @@ repository:
   cloneUrl: https://github.com/LucasG04/library-management-frontend.git
   fullName: LucasG04/library-management-frontend
 
-restartDeploymentRbacName: frontend-restart-deployment
+restartDeploymentRbacName: rbac-restart-deployment
 
 dockerConfigSecret: docker-hub-secret
 gitHubCommitStatusSecret:

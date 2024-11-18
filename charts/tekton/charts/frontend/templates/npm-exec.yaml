@@ -29,7 +29,7 @@ spec:
         script: |
           #!/bin/sh
           # check if the cache is mounted
-          if [ -d ${WORKSPACE_CACHE}/.npm ]; then
+          if [[ $(workspaces.cache.bound) == "true" ]]; then
             echo "Cache found, using it..."
             npm config set cache ${WORKSPACE_CACHE}/.npm
           fi
