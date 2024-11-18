@@ -110,6 +110,15 @@ spec:
           value: {{ .Values.image.name }}
         - name: IMAGE_TAG
           value: $(params.GIT_BRANCH)
+    - name: restart-deployment
+      taskRef:
+        name: restart-deployment
+      serviceAccountName: {{ .Values.restartDeploymentRbacName }}
+      runAfter:
+        - build-push-image
+      params:
+        - name: DEPLOYMENT_NAME
+          value: frontend
   finally:
     - name: commit-status-success
       taskRef:

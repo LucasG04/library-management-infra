@@ -1,0 +1,23 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: restart-deployment
+  labels:
+    {{- include "tasks.labels" . | nindent 4 }}
+spec:
+  description: >-
+    Restart a deployment in the same namespace.
+    This task requires a service account with the permissions ["get", "list", "patch"].
+  params:
+    - name: DEPLOYMENT_NAME
+      description: Name of the deployment to restart.
+  steps:
+    - name: restart-deployment
+      image: bitnami/kubectl:latest
+      script: |
+        #!/bin/sh
+        set -e
+        NAMESPACE=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)
+
+        echo "Restarting deployment $(params.DEPLOYMENT_NAME) in namespace $NAMESPACE"
+        kubectl rollout restart deployment $(params.DEPLOYMENT_NAME) -n $NAMESPACE
