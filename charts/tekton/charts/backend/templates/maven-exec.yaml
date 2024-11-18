@@ -26,7 +26,7 @@ spec:
       script: |
         #!/bin/sh
         # check if the cache is mounted
-        if [[ $(workspaces.cache.bound) == "true" ]]; then
+        if [ "$(workspaces.cache.bound)" = "true" ]; then
           echo "Cache found, using it..."
           mvn -Dmaven.repo.local=${WORKSPACE_CACHE}/.m2/repository $(params.COMMAND)
         else
