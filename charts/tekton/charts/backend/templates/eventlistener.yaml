@@ -1,0 +1,14 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: EventListener
+metadata:
+  name: {{ include "backend.name" . }} # Tekton will prefix dependent resources with "el-"
+  labels:
+    {{- include "backend.labels" . | nindent 4 }}
+spec:
+  serviceAccountName: pipeline
+  triggers:
+    - name: {{ include "backend.name" . }}
+      bindings:
+        - ref: {{ include "backend.name" . }}
+      template:
+        ref: {{ include "backend.name" . }}

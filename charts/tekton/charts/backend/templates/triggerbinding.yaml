@@ -1,0 +1,12 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerBinding
+metadata:
+  name: {{ include "backend.name" . }}
+  labels:
+    {{- include "backend.labels" . | nindent 4 }}
+spec:
+  params:
+    - name: GIT_URL
+      value: "$(body.repository_url)"
+    - name: GIT_BRANCH
+      value: "$(body.repository_branch)"

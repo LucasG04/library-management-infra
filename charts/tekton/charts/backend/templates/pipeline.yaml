@@ -1,0 +1,129 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: {{ include "backend.name" . }}
+  labels:
+    {{- include "backend.labels" . | nindent 4 }}
+spec:
+  params:
+    - name: GIT_URL
+      description: The URL of the git repository
+    - name: GIT_BRANCH
+      description: The git branch to clone
+  workspaces:
+    - name: source-pvc
+    - name: cache-pvc
+    - name: docker-config-secret
+  tasks:
+    - name: clone-repo
+      taskRef:
+        name: git-clone
+      workspaces:
+        - name: source
+          workspace: source-pvc
+      params:
+        - name: URL
+          value: $(params.GIT_URL)
+        - name: BRANCH
+          value: $(params.GIT_BRANCH)
+    - name: commit-status-pending
+      taskRef:
+        name: github-commit-status
+      runAfter:
+        - clone-repo
+      params:
+        - name: REPO_FULL_NAME
+          value: {{ .Values.repository.fullName }}
+        - name: SHA
+          value: $(tasks.clone-repo.results.CLONED_COMMIT_SHA)
+        - name: GITHUB_TOKEN_SECRET_NAME
+          value: {{ .Values.gitHubCommitStatusSecret.name }}
+        - name: GITHUB_TOKEN_SECRET_KEY
+          value: {{ .Values.gitHubCommitStatusSecret.key }}
+        - name: TARGET_URL
+          value: http://tekton/dashboard # placeholder
+        - name: DESCRIPTION
+          value: "CI started for $(context.pipelineRun.name)"
+        - name: STATE
+          value: pending
+    - name: mvn-package
+      taskRef:
+        name: maven-exec
+      runAfter:
+        - clone-repo
+      workspaces:
+        - name: source
+          workspace: source-pvc
+        - name: cache
+          workspace: cache-pvc
+      params:
+        - name: COMMAND
+          value: package
+    - name: build-push-image
+      taskRef:
+        name: kaniko
+      runAfter:
+        - mvn-package
+      workspaces:
+        - name: source
+          workspace: source-pvc
+        - name: dockerconfig
+          workspace: docker-config-secret
+      params:
+        - name: IMAGE_NAME
+          value: {{ .Values.image.name }}
+        - name: IMAGE_TAG
+          value: $(params.GIT_BRANCH)
+    - name: restart-deployment
+      taskRef:
+        name: restart-deployment
+      runAfter:
+        - build-push-image
+      params:
+        - name: DEPLOYMENT_NAME
+          value: {{ .Values.deploymentName }}
+  finally:
+    - name: commit-status-success
+      taskRef:
+        name: github-commit-status
+      when:
+        - input: "$(tasks.status)"
+          operator: notin
+          values: ["Failed"]
+      params:
+        - name: REPO_FULL_NAME
+          value: {{ .Values.repository.fullName }}
+        - name: SHA
+          value: $(tasks.clone-repo.results.CLONED_COMMIT_SHA)
+        - name: GITHUB_TOKEN_SECRET_NAME
+          value: {{ .Values.gitHubCommitStatusSecret.name }}
+        - name: GITHUB_TOKEN_SECRET_KEY
+          value: {{ .Values.gitHubCommitStatusSecret.key }}
+        - name: TARGET_URL
+          value: http://tekton/dashboard # placeholder
+        - name: DESCRIPTION
+          value: "CI success for $(context.pipelineRun.name)"
+        - name: STATE
+          value: success
+    - name: commit-status-failure
+      taskRef:
+        name: github-commit-status
+      when:
+        - input: "$(tasks.status)"
+          operator: in
+          values: ["Failed"]
+      params:
+        - name: REPO_FULL_NAME
+          value: {{ .Values.repository.fullName }}
+        - name: SHA
+          value: $(tasks.clone-repo.results.CLONED_COMMIT_SHA)
+        - name: GITHUB_TOKEN_SECRET_NAME
+          value: {{ .Values.gitHubCommitStatusSecret.name }}
+        - name: GITHUB_TOKEN_SECRET_KEY
+          value: {{ .Values.gitHubCommitStatusSecret.key }}
+        - name: TARGET_URL
+          value: http://tekton/dashboard # placeholder
+        - name: DESCRIPTION
+          value: "CI failure for $(context.pipelineRun.name)"
+        - name: STATE
+          value: failure

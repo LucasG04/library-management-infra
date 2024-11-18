@@ -1,0 +1,128 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "backend.name" . }}-polling
+  labels:
+    {{- include "backend.labels" . | nindent 4 }}
+spec:
+  schedule: "*/1 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: polling-job
+              volumeMounts:
+                - name: polledrepos
+                  mountPath: /repos
+              image: rockylinux/rocky-toolbox:9
+              env:
+                - name: REPOURL
+                  value: {{ .Values.repository.cloneUrl }}
+                - name: REPONAME
+                  value: {{ .Values.repository.fullName }}
+                - name: REPOBRANCH
+                  value: {{ .Values.global.backend.ciBranch }}
+                - name: EVENTLISTENER_SVC_URL
+                  value: http://el-{{ include "backend.name" . }}.{{ .Release.Namespace }}.svc.cluster.local:8080
+              command:
+                - /bin/bash
+              args:
+                - -c
+                - |
+                  set -euo pipefail
+
+                  # Trap to handle errors
+                  trap 'echo "Error occurred at line $LINENO"; exit 1' ERR
+
+                  # Logging function
+                  log() {
+                      local level="$1"
+                      local message="$2"
+                      echo "[$(date +'%Y-%m-%d %H:%M:%S')] [$level] $message"
+                  }
+
+                  # Check required environment variables
+                  required_vars=(REPONAME REPOURL REPOBRANCH EVENTLISTENER_SVC_URL)
+                  for var in "${required_vars[@]}"; do
+                      if [ -z "${!var:-}" ]; then
+                          log "ERROR" "Environment variable $var is not set"
+                          exit 1
+                      fi
+                  done
+
+                  # Check for required commands
+                  required_commands=(git curl)
+                  for cmd in "${required_commands[@]}"; do
+                      if ! command -v "$cmd" &> /dev/null; then
+                          log "ERROR" "Required command '$cmd' not found"
+                          exit 1
+                      fi
+                  done
+
+                  # Variables
+                  BASEDIR="/repos"
+                  REPONAME_CLEAN=$(echo "${REPONAME}" | sed 's/\//-/g')
+
+                  # Revision initialization
+                  log "INFO" "Initializing revisions for repository ${REPONAME} (${REPOURL})"
+                  _current_revision=$(git ls-remote --heads "${REPOURL}" "${REPOBRANCH}" | awk '{print $1}')
+                  _prev_revision="${_current_revision}"
+
+                  # Check if previous revision file exists
+                  if [ -f "${BASEDIR}/${REPONAME_CLEAN}.sha256" ]; then
+                      _prev_revision=$(cat "${BASEDIR}/${REPONAME_CLEAN}.sha256")
+                      log "INFO" "Loaded previous revision: ${_prev_revision}"
+                  else
+                      log "INFO" "No previous revision found. Saving the current revision."
+                      echo -n "${_current_revision}" > "${BASEDIR}/${REPONAME_CLEAN}.sha256"
+                  fi
+
+                  # Compare revisions
+                  if [ "${_current_revision}" != "${_prev_revision}" ]; then
+                      log "INFO" "Changes detected. Current revision: ${_current_revision}, Previous revision: ${_prev_revision}"
+                      echo -n "${_current_revision}" > "${BASEDIR}/${REPONAME_CLEAN}.sha256"
+
+                      # Generate JSON data
+                      _jsondata=$(printf '{
+                          "revision": "%s",
+                          "repository_url": "%s",
+                          "repository_name": "%s",
+                          "repository_branch": "%s"
+                      }' "${_current_revision}" "${REPOURL}" "${REPONAME}" "${REPOBRANCH}")
+
+                      log "INFO" "Triggering pipeline with data: ${_jsondata}"
+
+                      # Trigger the pipeline
+                      response=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+                          -H 'Content-Type: application/json' \
+                          -d "${_jsondata}" "${EVENTLISTENER_SVC_URL}")
+
+                      # Check response if http code is not 2xx
+                      if [[ ${response} != 2* ]]; then
+                          log "ERROR" "Failed to trigger pipeline. HTTP status code: ${response}"
+                          exit 1
+                      fi
+
+                      log "INFO" "Pipeline triggered successfully."
+                  else
+                      log "INFO" "No changes detected. No action needed."
+                  fi
+          restartPolicy: Never
+          volumes:
+            - name: polledrepos
+              persistentVolumeClaim:
+                claimName: {{ include "backend.name" . }}-polledrepos
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "backend.name" . }}-polledrepos
+  labels:
+    {{- include "backend.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi

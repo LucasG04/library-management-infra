@@ -1,0 +1,17 @@
+# Values for the frontend pipeline chart
+
+image:
+  name: lucasg04/library-management-backend
+
+deploymentName: library-management-backend
+
+repository:
+  cloneUrl: https://github.com/LucasG04/library-management-backend.git
+  fullName: LucasG04/library-management-backend
+
+restartDeploymentRbacName: backend-restart-deployment
+
+dockerConfigSecret: docker-hub-secret
+gitHubCommitStatusSecret:
+  name: github-commit-status-token
+  key: token

@@ -1,0 +1,43 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerTemplate
+metadata:
+  name: {{ include "backend.name" . }}
+  labels:
+    {{- include "backend.labels" . | nindent 4 }}
+spec:
+  params:
+    - name: GIT_URL
+      description: Git Repository URL
+    - name: GIT_BRANCH
+      description: Git Branch
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1
+      kind: PipelineRun
+      metadata:
+        generateName: {{ include "backend.name" . }}-run-
+      spec:
+        pipelineRef:
+          name: {{ include "backend.name" . }}
+        params:
+          - name: GIT_URL
+            value: "$(tt.params.GIT_URL)"
+          - name: GIT_BRANCH
+            value: "$(tt.params.GIT_BRANCH)"
+        taskRunSpecs:
+          - pipelineTaskName: restart-deployment
+            serviceAccountName: {{ .Values.restartDeploymentRbacName }}
+        workspaces:
+          - name: source-pvc
+            volumeClaimTemplate:
+              spec:
+                accessModes:
+                  - ReadWriteMany
+                resources:
+                  requests:
+                    storage: 2Gi
+          - name: cache-pvc
+            persistentVolumeClaim:
+              claimName: {{ include "backend.name" . }}-cache
+          - name: docker-config-secret
+            secret:
+              secretName: {{ .Values.dockerConfigSecret }}
