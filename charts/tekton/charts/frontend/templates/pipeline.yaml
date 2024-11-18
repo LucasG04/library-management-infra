@@ -117,7 +117,7 @@ spec:
         - build-push-image
       params:
         - name: DEPLOYMENT_NAME
-          value: frontend
+          value: {{ .Values.deploymentName }}
   finally:
     - name: commit-status-success
       taskRef:
