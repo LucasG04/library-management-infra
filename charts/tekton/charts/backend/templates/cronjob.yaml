@@ -10,17 +10,17 @@ spec:
     spec:
       template:
         spec:
+          serviceAccountName: {{ .Values.configmapAccessRbacName }}
           containers:
             - name: polling-job
+              image: lucasg04/toolbox:latest
               volumeMounts:
-                - name: polledrepos
-                  mountPath: /repos
-              image: rockylinux/rocky-toolbox:9
+                - name: config-volume
+                  mountPath: /etc/config
+                  readOnly: true
               env:
                 - name: REPOURL
                   value: {{ .Values.repository.cloneUrl }}
-                - name: REPONAME
-                  value: {{ .Values.repository.fullName }}
                 - name: REPOBRANCH
                   value: {{ .Values.global.backend.ciBranch }}
                 - name: EVENTLISTENER_SVC_URL
@@ -43,7 +43,7 @@ spec:
                   }
 
                   # Check required environment variables
-                  required_vars=(REPONAME REPOURL REPOBRANCH EVENTLISTENER_SVC_URL)
+                  required_vars=(REPOURL REPOBRANCH EVENTLISTENER_SVC_URL)
                   for var in "${required_vars[@]}"; do
                       if [ -z "${!var:-}" ]; then
                           log "ERROR" "Environment variable $var is not set"
@@ -52,7 +52,7 @@ spec:
                   done
 
                   # Check for required commands
-                  required_commands=(git curl)
+                  required_commands=(kubectl git curl)
                   for cmd in "${required_commands[@]}"; do
                       if ! command -v "$cmd" &> /dev/null; then
                           log "ERROR" "Required command '$cmd' not found"
@@ -60,36 +60,35 @@ spec:
                       fi
                   done
 
-                  # Variables
-                  BASEDIR="/repos"
-                  REPONAME_CLEAN=$(echo "${REPONAME}" | sed 's/\//-/g')
-
-                  # Revision initialization
-                  log "INFO" "Initializing revisions for repository ${REPONAME} (${REPOURL})"
-                  _current_revision=$(git ls-remote --heads "${REPOURL}" "${REPOBRANCH}" | awk '{print $1}')
-                  _prev_revision="${_current_revision}"
-
-                  # Check if previous revision file exists
-                  if [ -f "${BASEDIR}/${REPONAME_CLEAN}.sha256" ]; then
-                      _prev_revision=$(cat "${BASEDIR}/${REPONAME_CLEAN}.sha256")
-                      log "INFO" "Loaded previous revision: ${_prev_revision}"
+                  # Load previous hash from ConfigMap
+                  configmap_file="/etc/config/revision.sha256"
+                  _prev_revision=""
+                  if [ -f "${configmap_file}" ]; then
+                      _prev_revision=$(cat "${configmap_file}")
+                      log "INFO" "Loaded previous revision from ConfigMap: ${_prev_revision}"
                   else
-                      log "INFO" "No previous revision found. Saving the current revision."
-                      echo -n "${_current_revision}" > "${BASEDIR}/${REPONAME_CLEAN}.sha256"
+                      log "INFO" "No previous revision found."
                   fi
+
+                  # Get current revision
+                  _current_revision=$(git ls-remote --heads "${REPOURL}" "${REPOBRANCH}" | awk '{print $1}')
+                  log "INFO" "Current revision: ${_current_revision}"
 
                   # Compare revisions
                   if [ "${_current_revision}" != "${_prev_revision}" ]; then
                       log "INFO" "Changes detected. Current revision: ${_current_revision}, Previous revision: ${_prev_revision}"
-                      echo -n "${_current_revision}" > "${BASEDIR}/${REPONAME_CLEAN}.sha256"
+
+                      # Update ConfigMap with new revision
+                      kubectl create configmap {{ include "backend.name" . }}-last-polled-revision \
+                        --from-literal="revision.sha256=${_current_revision}" \
+                        --dry-run=client -o yaml | kubectl apply -f -
 
                       # Generate JSON data
                       _jsondata=$(printf '{
                           "revision": "%s",
                           "repository_url": "%s",
-                          "repository_name": "%s",
                           "repository_branch": "%s"
-                      }' "${_current_revision}" "${REPOURL}" "${REPONAME}" "${REPOBRANCH}")
+                      }' "${_current_revision}" "${REPOURL}" "${REPOBRANCH}")
 
                       log "INFO" "Triggering pipeline with data: ${_jsondata}"
 
@@ -110,19 +109,15 @@ spec:
                   fi
           restartPolicy: Never
           volumes:
-            - name: polledrepos
-              persistentVolumeClaim:
-                claimName: {{ include "backend.name" . }}-polledrepos
+            - name: config-volume
+              configMap:
+                name: {{ include "backend.name" . }}-last-polled-revision
 ---
 apiVersion: v1
-kind: PersistentVolumeClaim
+kind: ConfigMap
 metadata:
-  name: {{ include "backend.name" . }}-polledrepos
+  name: {{ include "backend.name" . }}-last-polled-revision
   labels:
     {{- include "backend.labels" . | nindent 4 }}
-spec:
-  accessModes:
-    - ReadWriteMany
-  resources:
-    requests:
-      storage: 1Gi
+data:
+  revision.sha256: ""

@@ -1,1 +1,2 @@
 restartDeploymentRbacName: rbac-restart-deployment
+configmapAccessRbacName: configmap-access
