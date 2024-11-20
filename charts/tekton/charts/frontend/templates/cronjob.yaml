@@ -86,9 +86,8 @@ spec:
                       _jsondata=$(printf '{
                           "revision": "%s",
                           "repository_url": "%s",
-                          "repository_name": "%s",
                           "repository_branch": "%s"
-                      }' "${_current_revision}" "${REPOURL}" "${REPONAME}" "${REPOBRANCH}")
+                      }' "${_current_revision}" "${REPOURL}" "${REPOBRANCH}")
 
                       log "INFO" "Triggering pipeline with data: ${_jsondata}"
 
