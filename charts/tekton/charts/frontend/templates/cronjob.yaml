@@ -13,10 +13,11 @@ spec:
           serviceAccountName: {{ .Values.configmapAccessRbacName }}
           containers:
             - name: polling-job
-              volumeMounts:
-                - name: polledrepos
-                  mountPath: /repos
               image: lucasg04/toolbox:latest
+              volumeMounts:
+                - name: config-volume
+                  mountPath: /etc/config
+                  readOnly: true
               env:
                 - name: REPOURL
                   value: {{ .Values.repository.cloneUrl }}
@@ -51,7 +52,7 @@ spec:
                   done
 
                   # Check for required commands
-                  required_commands=(git curl)
+                  required_commands=(kubectl git curl)
                   for cmd in "${required_commands[@]}"; do
                       if ! command -v "$cmd" &> /dev/null; then
                           log "ERROR" "Required command '$cmd' not found"
@@ -106,10 +107,6 @@ spec:
                   else
                       log "INFO" "No changes detected. No action needed."
                   fi
-              volumeMounts:
-                - name: config-volume
-                  mountPath: /etc/config
-                  readOnly: true
           restartPolicy: Never
           volumes:
             - name: config-volume
