@@ -75,12 +75,11 @@ spec:
                   # Compare revisions
                   if [ "${_current_revision}" != "${_prev_revision}" ]; then
                       log "INFO" "Changes detected. Current revision: ${_current_revision}, Previous revision: ${_prev_revision}"
-                      echo -n "${_current_revision}" > next_revision.sha256
 
                       # Update ConfigMap with new revision
                       kubectl create configmap {{ include "frontend.name" . }}-last-polled-revision \
-                          --from-file="revision.sha256=next_revision.sha256" \
-                          --dry-run=client -o yaml | kubectl apply -f -
+                        --from-literal="revision.sha256=${_current_revision}" \
+                        --dry-run=client -o yaml | kubectl apply -f -
 
                       # Generate JSON data
                       _jsondata=$(printf '{
