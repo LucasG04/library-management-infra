@@ -10,6 +10,7 @@ repository:
   fullName: LucasG04/library-management-frontend
 
 restartDeploymentRbacName: rbac-restart-deployment
+lastPolledRevisionRbacName: frontend-last-polled-revision
 
 dockerConfigSecret: docker-hub-secret
 gitHubCommitStatusSecret:
