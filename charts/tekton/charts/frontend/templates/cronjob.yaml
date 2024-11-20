@@ -15,7 +15,7 @@ spec:
               volumeMounts:
                 - name: polledrepos
                   mountPath: /repos
-              image: rockylinux/rocky-toolbox:9
+              image: lucasg04/toolbox:latest
               env:
                 - name: REPOURL
                   value: {{ .Values.repository.cloneUrl }}
