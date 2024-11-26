@@ -23,15 +23,12 @@ spec:
       - name: run-npm-command
         image: $(params.IMAGE)
         workingDir: $(workspaces.source.path)
-        env:
-          - name: CI
-            value: "true"
         script: |
           #!/bin/sh
           # check if the cache is mounted
           if [ "$(workspaces.cache.bound)" = "true" ]; then
             echo "Cache found, using it..."
-            npm config set cache ${WORKSPACE_CACHE}/.npm
+            npm config set cache $(workspaces.cache.path)/.npm
           fi
           
           npm $(params.COMMAND)
