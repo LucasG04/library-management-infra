@@ -22,9 +22,6 @@ spec:
       description: Includes a docker `config.json`
       optional: true
       mountPath: /kaniko/.docker
-  results:
-    - name: IMAGE_URL
-      description: URL of the image just built.
   steps:
     - name: build-and-push
       workingDir: $(workspaces.source.path)
@@ -36,8 +33,3 @@ spec:
       # Ensure kaniko runs as root, "securityContext" is required for platforms like OpenShift.
       securityContext:
         runAsUser: 0
-    - name: write-url
-      image: bash:latest
-      script: |
-        set -e
-        echo -n "$(params.IMAGE_NAME):$(params.IMAGE_TAG)" | tee "$(results.IMAGE_URL.path)"
