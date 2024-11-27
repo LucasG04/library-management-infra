@@ -17,7 +17,5 @@ spec:
       script: |
         #!/bin/sh
         set -e
-        NAMESPACE=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)
-
-        echo "Restarting deployment $(params.DEPLOYMENT_NAME) in namespace $NAMESPACE"
-        kubectl rollout restart deployment $(params.DEPLOYMENT_NAME) -n $NAMESPACE
+        echo "Restarting deployment $(params.DEPLOYMENT_NAME) in namespace {{ .Release.Namespace }}"
+        kubectl rollout restart deployment $(params.DEPLOYMENT_NAME) -n {{ .Release.Namespace }}
