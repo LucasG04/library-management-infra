@@ -46,7 +46,7 @@ spec:
           value: "CI started for $(context.pipelineRun.name)"
         - name: STATE
           value: pending
-    - name: npm-install
+    - name: install
       taskRef:
         name: npm-exec
       runAfter:
@@ -59,22 +59,22 @@ spec:
       params:
         - name: COMMAND
           value: ci
-    - name: npm-lint
+    - name: lint
       taskRef:
         name: npm-exec
       runAfter:
-        - npm-install
+        - install
       workspaces:
         - name: source
           workspace: source-pvc
       params:
         - name: COMMAND
           value: run lint
-    - name: npm-test
+    - name: test
       taskRef:
         name: npm-exec
       runAfter:
-        - npm-install
+        - install
       workspaces:
         - name: source
           workspace: source-pvc
@@ -83,12 +83,12 @@ spec:
           value: timbru31/node-chrome:22-slim
         - name: COMMAND
           value: run test:ci
-    - name: npm-build
+    - name: build
       taskRef:
         name: npm-exec
       runAfter:
-        - npm-lint
-        - npm-test
+        - lint
+        - test
       workspaces:
         - name: source
           workspace: source-pvc
@@ -99,7 +99,7 @@ spec:
       taskRef:
         name: kaniko
       runAfter:
-        - npm-build
+        - build
       workspaces:
         - name: source
           workspace: source-pvc
