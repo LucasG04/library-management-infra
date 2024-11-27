@@ -12,15 +12,9 @@ spec:
       description: Name of the image to build.
     - name: IMAGE_TAG
       description: Tag of the image to build.
-    - name: DOCKERFILE
-      description: Path to the Dockerfile to build.
-      default: ./Dockerfile
     - name: CONTEXT
       description: The build context used by Kaniko.
       default: ./
-    - name: BUILDER_IMAGE
-      description: The image on which the build will run (default is v1.5.1)
-      default: gcr.io/kaniko-project/executor:v1.5.1@sha256:c6166717f7fe0b7da44908c986137ecfeab21f31ec3992f6e128fff8a94be8a5
   workspaces:
     - name: source
       description: Holds the context and Dockerfile
@@ -34,17 +28,16 @@ spec:
   steps:
     - name: build-and-push
       workingDir: $(workspaces.source.path)
-      image: $(params.BUILDER_IMAGE)
+      image: gcr.io/kaniko-project/executor:latest
       args:
-        - --dockerfile=$(params.DOCKERFILE)
+        - --dockerfile=$(workspaces.source.path)/$(params.CONTEXT)/Dockerfile
         - --context=$(workspaces.source.path)/$(params.CONTEXT)
         - --destination=$(params.IMAGE_NAME):$(params.IMAGE_TAG)
       # Ensure kaniko runs as root, "securityContext" is required for platforms like OpenShift.
       securityContext:
         runAsUser: 0
     - name: write-url
-      image: docker.io/library/bash:5.1.4@sha256:c523c636b722339f41b6a431b44588ab2f762c5de5ec3bd7964420ff982fb1d9
+      image: bash:latest
       script: |
         set -e
-        image="$(params.IMAGE_NAME):$(params.IMAGE_TAG)"
-        echo -n "${image}" | tee "$(results.IMAGE_URL.path)"
+        echo -n "$(params.IMAGE_NAME):$(params.IMAGE_TAG)" | tee "$(results.IMAGE_URL.path)"
