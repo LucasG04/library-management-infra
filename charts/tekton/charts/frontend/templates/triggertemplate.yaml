@@ -25,7 +25,7 @@ spec:
             value: "$(tt.params.GIT_BRANCH)"
         taskRunSpecs:
           - pipelineTaskName: restart-deployment
-            serviceAccountName: {{ .Values.restartDeploymentRbacName }}
+            serviceAccountName: {{ .Values.global.restartDeploymentRbacName }}
         workspaces:
           - name: source-pvc
             volumeClaimTemplate:
@@ -38,6 +38,3 @@ spec:
           - name: cache-pvc
             persistentVolumeClaim:
               claimName: {{ include "frontend.name" . }}-cache
-          - name: docker-config-secret
-            secret:
-              secretName: {{ .Values.dockerConfigSecret }}

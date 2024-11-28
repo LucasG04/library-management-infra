@@ -18,18 +18,32 @@ spec:
   workspaces:
     - name: source
       description: Holds the context and Dockerfile
-    - name: dockerconfig
-      description: Includes a docker `config.json`
-      optional: true
-      mountPath: /kaniko/.docker
   steps:
     - name: build-and-push
       workingDir: $(workspaces.source.path)
+      env:
+        - name: REGISTRY_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.global.dockerConfigSecret }}
+              key: username
+        - name: REGISTRY_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.global.dockerConfigSecret }}
+              key: password
       image: gcr.io/kaniko-project/executor:latest
-      args:
-        - --dockerfile=$(workspaces.source.path)/$(params.CONTEXT)/Dockerfile
-        - --context=$(workspaces.source.path)/$(params.CONTEXT)
-        - --destination=$(params.IMAGE_NAME):$(params.IMAGE_TAG)
+      script: |
+        #!/bin/sh
+        set -e -x
+
+        AUTH=$(echo -n "${REGISTRY_USERNAME}:${REGISTRY_PASSWORD}" | base64)
+        echo '{"auths": {"https://index.docker.io/v1/": {"auth": "'$AUTH'}}}' > /kaniko/.docker/config.json
+
+        kaniko \
+          --dockerfile=$(workspaces.source.path)/$(params.CONTEXT)/Dockerfile \
+          --context=$(workspaces.source.path)/$(params.CONTEXT) \
+          --destination=$(params.IMAGE_NAME):$(params.IMAGE_TAG)
       # Ensure kaniko runs as root, "securityContext" is required for platforms like OpenShift.
       securityContext:
         runAsUser: 0

@@ -7,3 +7,11 @@ global:
   backend:
     imageTag: 0.0.0
     imagePullPolicy: IfNotPresent
+
+  restartDeploymentRbacName: rbac-restart-deployment
+  configmapAccessRbacName: configmap-access
+
+  dockerConfigSecret: docker-hub-secret
+  gitHubCommitStatusSecret:
+    name: github-commit-status-token
+    key: token

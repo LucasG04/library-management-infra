@@ -8,11 +8,3 @@ deploymentName: library-management-backend
 repository:
   cloneUrl: https://github.com/LucasG04/library-management-backend.git
   fullName: LucasG04/library-management-backend
-
-restartDeploymentRbacName: rbac-restart-deployment
-configmapAccessRbacName: configmap-access
-
-dockerConfigSecret: docker-hub-secret
-gitHubCommitStatusSecret:
-  name: github-commit-status-token
-  key: token

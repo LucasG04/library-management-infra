@@ -13,7 +13,6 @@ spec:
   workspaces:
     - name: source-pvc
     - name: cache-pvc
-    - name: docker-config-secret
   tasks:
     - name: clone-repo
       taskRef:
@@ -37,9 +36,9 @@ spec:
         - name: SHA
           value: $(tasks.clone-repo.results.CLONED_COMMIT_SHA)
         - name: GITHUB_TOKEN_SECRET_NAME
-          value: {{ .Values.gitHubCommitStatusSecret.name }}
+          value: {{ .Values.global.gitHubCommitStatusSecret.name }}
         - name: GITHUB_TOKEN_SECRET_KEY
-          value: {{ .Values.gitHubCommitStatusSecret.key }}
+          value: {{ .Values.global.gitHubCommitStatusSecret.key }}
         - name: TARGET_URL
           value: http://tekton/dashboard # placeholder
         - name: DESCRIPTION
@@ -96,9 +95,9 @@ spec:
         - name: SHA
           value: $(tasks.clone-repo.results.CLONED_COMMIT_SHA)
         - name: GITHUB_TOKEN_SECRET_NAME
-          value: {{ .Values.gitHubCommitStatusSecret.name }}
+          value: {{ .Values.global.gitHubCommitStatusSecret.name }}
         - name: GITHUB_TOKEN_SECRET_KEY
-          value: {{ .Values.gitHubCommitStatusSecret.key }}
+          value: {{ .Values.global.gitHubCommitStatusSecret.key }}
         - name: TARGET_URL
           value: http://tekton/dashboard # placeholder
         - name: DESCRIPTION
@@ -118,9 +117,9 @@ spec:
         - name: SHA
           value: $(tasks.clone-repo.results.CLONED_COMMIT_SHA)
         - name: GITHUB_TOKEN_SECRET_NAME
-          value: {{ .Values.gitHubCommitStatusSecret.name }}
+          value: {{ .Values.global.gitHubCommitStatusSecret.name }}
         - name: GITHUB_TOKEN_SECRET_KEY
-          value: {{ .Values.gitHubCommitStatusSecret.key }}
+          value: {{ .Values.global.gitHubCommitStatusSecret.key }}
         - name: TARGET_URL
           value: http://tekton/dashboard # placeholder
         - name: DESCRIPTION

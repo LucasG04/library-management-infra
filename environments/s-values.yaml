@@ -9,3 +9,12 @@ global:
     ciBranch: main
     imageTag: main
     imagePullPolicy: Always
+
+  restartDeploymentRbacName: rbac-restart-deployment
+  configmapAccessRbacName: configmap-access
+
+  dockerConfigSecret: docker-hub-secret
+  gitHubCommitStatusSecret:
+    name: github-commit-status-token
+    key: token
+  gitHubInfraCommitSecret: github-commit-status-token

@@ -1,0 +1,68 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name:  {{ include "deploy-release.name" . }}
+  labels:
+    {{- include "deploy-release.labels" . | nindent 4 }}
+spec:
+  params:
+    - name: COMPONENT
+      type: string
+      description: Component to be released. 'frontend' | 'backend' | 'all'
+    - name: VERSION
+      type: string
+      description: Semantic Version, z.B. "0.11.2"
+  tasks:
+    - name: skopeo
+      params:
+        - name: SOURCE
+          value: $(params.COMPONENT)
+        - name: DESTINATION
+          value: $(params.VERSION)
+      taskRef:
+        kind: Task
+        name: skopeo
+    - name: clone-infra
+      params:
+        - name: URL
+          value: {{ .Values.infraGitUrl }}
+        - name: BRANCH
+          value: main
+      taskRef:
+        kind: Task
+        name: git-clone
+      workspaces:
+        - name: source
+          workspace: source
+    - name: update-version
+      params:
+        - name: COMPONENT
+          value: $(params.COMPONENT)
+        - name: VERSION
+          value: $(params.VERSION)
+      runAfter:
+        - clone-infra
+      taskRef:
+        kind: Task
+        name: update-infra-component-version
+      workspaces:
+        - name: source
+          workspace: source
+    - name: commit-push
+      params:
+        - name: URL
+          value: {{ .Values.infraGitUrl }}
+        - name: BRANCH
+          value: main
+        - name: MESSAGE
+          value: "Updates $(params.env)-values.yaml for $(params.component) to v$(params.version)"
+        - name: SECRET_NAME
+          value: {{ .Values.global.gitHubInfraCommitSecret }}
+      runAfter:
+        - update-version
+      taskRef:
+        kind: Task
+        name: git-commit-push
+      workspaces:
+        - name: source
+          workspace: source
