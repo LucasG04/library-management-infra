@@ -48,7 +48,7 @@ spec:
           value: pending
     - name: mvn-package
       taskRef:
-        name: maven-exec
+        name: mvn-exec
       runAfter:
         - clone-repo
       workspaces:
