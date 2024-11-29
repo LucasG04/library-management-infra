@@ -29,6 +29,7 @@ spec:
               name: {{ .Values.global.dockerConfigSecret }}
               key: password
       script: |
+        #!/bin/sh
         set +x
 
         skopeo copy \
