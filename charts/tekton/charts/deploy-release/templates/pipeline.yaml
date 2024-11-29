@@ -6,19 +6,33 @@ metadata:
     {{- include "deploy-release.labels" . | nindent 4 }}
 spec:
   params:
-    - name: COMPONENT
-      type: string
-      description: Component to be released. 'frontend' | 'backend' | 'all'
+    - name: COMPONENTS
+      type: array
+      description: Component to be released. 'frontend', 'backend'
     - name: VERSION
       type: string
       description: Semantic Version, z.B. "0.11.2"
+    - name: IMAGE_TAG
+      type: string
+      description: The tag of the component image to deploy.
   tasks:
-    - name: skopeo
+    - name: skopeo-frontend
+      when: "'frontend' in $(params.COMPONENTS[*])"
       params:
         - name: SOURCE
-          value: $(params.COMPONENT)
+          value: {{ .Values.frontend.imageName }}:$(params.IMAGE_TAG)
         - name: DESTINATION
-          value: $(params.VERSION)
+          value: {{ .Values.frontend.imageName }}:$(params.VERSION)
+      taskRef:
+        kind: Task
+        name: skopeo
+    - name: skopeo-backend
+      when: "'backend' in $(params.COMPONENTS[*])"
+      params:
+        - name: SOURCE
+          value: {{ .Values.backend.imageName }}:$(params.IMAGE_TAG)
+        - name: DESTINATION
+          value: {{ .Values.backend.imageName }}:$(params.VERSION)
       taskRef:
         kind: Task
         name: skopeo
@@ -36,8 +50,8 @@ spec:
           workspace: source
     - name: update-version
       params:
-        - name: COMPONENT
-          value: $(params.COMPONENT)
+        - name: COMPONENTS
+          value: $(params.COMPONENTS)
         - name: VERSION
           value: $(params.VERSION)
       runAfter:
@@ -55,7 +69,7 @@ spec:
         - name: BRANCH
           value: main
         - name: MESSAGE
-          value: "Updates $(params.env)-values.yaml for $(params.component) to v$(params.version)"
+          value: "Updates $(params.COMPONENTS[*]) to v$(params.VERSION)"
         - name: SECRET_NAME
           value: {{ .Values.global.gitHubInfraCommitSecret }}
       runAfter:

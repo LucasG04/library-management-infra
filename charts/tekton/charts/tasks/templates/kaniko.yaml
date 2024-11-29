@@ -20,7 +20,7 @@ spec:
       description: Holds the context and Dockerfile
   steps:
     - name: build-and-push
-      workingDir: $(workspaces.source.path)
+      image: gcr.io/kaniko-project/executor:latest
       env:
         - name: REGISTRY_USERNAME
           valueFrom:
@@ -32,7 +32,7 @@ spec:
             secretKeyRef:
               name: {{ .Values.global.dockerConfigSecret }}
               key: password
-      image: gcr.io/kaniko-project/executor:latest
+      workingDir: $(workspaces.source.path)
       script: |
         #!/bin/sh
         set -e -x

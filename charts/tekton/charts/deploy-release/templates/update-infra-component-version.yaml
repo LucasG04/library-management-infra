@@ -1,0 +1,47 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: update-infra-component-version
+spec:
+  params:
+    - name: COMPONENTS
+      type: array
+      description: List of components to update
+    - name: VERSION
+      type: string
+      description: Version to update the components to
+  workspaces:
+    - name: source
+      description: The workspace containing the source code
+  steps:
+    - name: update-version
+      image: linuxserver/yq:latest
+      workingDir: $(workspaces.source.path)
+      script: |
+        #!/bin/bash
+
+        # Function to update the value in the YAML file using yq
+        update_yaml_value() {
+            local file="$1"
+            local key="$2"
+            local value="$3"
+            yq eval ".${key} = \"${value}\"" -i "${file}"
+        }
+
+        yaml_file="./environments/p-values.yaml"
+
+        # Check if the YAML file exists
+        if [ ! -f "$yaml_file" ]; then
+            echo "File ${yaml_file} does not exist."
+            exit 1
+        fi
+
+        for component in $(params.COMPONENTS); do
+          echo "Updating component $component to version $(params.VERSION)"
+          update_yaml_value "$yaml_file" "global.$component.imageTag" "$(params.VERSION)"
+        done
+    - name: validate-chart
+      image: alpine/helm:latest
+      workingDir: $(workspaces.source.path)
+      script: |
+        helm template ./charts -f "./environments/p-values.yaml"
