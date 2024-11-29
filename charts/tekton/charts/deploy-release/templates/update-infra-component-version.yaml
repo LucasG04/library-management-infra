@@ -17,7 +17,7 @@ spec:
       description: The workspace containing the source code
   steps:
     - name: update-version
-      image: mikefarah/yq:4
+      image: linuxserver/yq:3.4.3
       workingDir: $(workspaces.source.path)
       args: ["$(params.COMPONENTS[*])"]
       script: |
@@ -32,7 +32,7 @@ spec:
 
         for component in ${@}; do
           echo "Updating component $component to version $(params.VERSION)"
-          yq e -i ".global.${component}.imageTag = \"$(params.VERSION)\"" ${values_file}
+          yq -Y --indentless --in-place '.global.'${component}'.imageTag = "$(params.VERSION)"' $values_file
         done
     - name: validate-chart
       image: alpine/helm:latest
