@@ -79,7 +79,7 @@ spec:
         - name: BRANCH
           value: main
         - name: MESSAGE
-          value: "Updates $(params.COMPONENTS[*]) to v$(params.VERSION)"
+          value: "Updates components to v$(params.VERSION)"
         - name: SECRET_NAME
           value: {{ .Values.global.gitHubInfraCommitSecret }}
       runAfter:
