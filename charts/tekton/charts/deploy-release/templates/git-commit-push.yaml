@@ -35,14 +35,14 @@ spec:
             name: $(params.SECRET_NAME)
             key: password
       script: |
-      #!/bin/sh
-      git config --global user.email "tekton-ci@example.com"
-      git config --global user.name "tekton-ci"
-      
-      # remove https from the URL
-      URL=$(echo $(params.URL) | sed 's/^https:\/\///')
-      git remote set-url origin https://$GIT_USERNAME:$GIT_PASSWORD@$URL
-      
-      git add .
-      git commit -m "$(params.MESSAGE)"
-      git push origin $(params.BRANCH)
+        #!/bin/sh
+        git config --global user.email "tekton-ci@example.com"
+        git config --global user.name "tekton-ci"
+        
+        # remove https from the URL
+        URL=$(echo $(params.URL) | sed 's/^https:\/\///')
+        git remote set-url origin https://$GIT_USERNAME:$GIT_PASSWORD@$URL
+        
+        git add .
+        git commit -m "$(params.MESSAGE)"
+        git push origin $(params.BRANCH)
