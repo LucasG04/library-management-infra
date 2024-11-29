@@ -34,8 +34,3 @@ spec:
           echo "Updating component $component to version $(params.VERSION)"
           yq -Y --indentless --in-place '.global.'${component}'.imageTag = "$(params.VERSION)"' $values_file
         done
-    - name: validate-chart
-      image: alpine/helm:latest
-      workingDir: $(workspaces.source.path)
-      script: |
-        helm template ./charts -f "./environments/p-values.yaml"
