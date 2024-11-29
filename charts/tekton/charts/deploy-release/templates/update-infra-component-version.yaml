@@ -32,7 +32,7 @@ spec:
 
         for component in ${@}; do
           echo "Updating component $component to version $(params.VERSION)"
-          yq eval ".global.${component}.imageTag = \"$(params.VERSION)\"" -i "${values_file}"
+          yq eval -i ".global.${component}.imageTag = \"$(params.VERSION)\"" ${values_file}
         done
     - name: validate-chart
       image: alpine/helm:latest
