@@ -17,7 +17,8 @@ spec:
       description: The tag of the component image to deploy.
   tasks:
     - name: skopeo-frontend
-      when: "'frontend' in $(params.COMPONENTS[*])"
+      when:
+        - cel: "'frontend' in $(params.COMPONENTS[*])"
       params:
         - name: SOURCE
           value: {{ .Values.frontend.imageName }}:$(params.IMAGE_TAG)
@@ -27,7 +28,8 @@ spec:
         kind: Task
         name: skopeo
     - name: skopeo-backend
-      when: "'backend' in $(params.COMPONENTS[*])"
+      when:
+        - cel: "'backend' in $(params.COMPONENTS[*])"
       params:
         - name: SOURCE
           value: {{ .Values.backend.imageName }}:$(params.IMAGE_TAG)
