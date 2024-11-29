@@ -66,8 +66,6 @@ spec:
       workspaces:
         - name: source
           workspace: source-pvc
-        - name: dockerconfig
-          workspace: docker-config-secret
       params:
         - name: IMAGE_NAME
           value: {{ .Values.image.name }}
