@@ -61,7 +61,7 @@ spec:
     - name: update-version
       params:
         - name: COMPONENTS
-          value: $(params.COMPONENTS)
+          value: $(params.COMPONENTS[*])
         - name: VERSION
           value: $(params.VERSION)
       runAfter:
@@ -79,7 +79,7 @@ spec:
         - name: BRANCH
           value: main
         - name: MESSAGE
-          value: "Updates components to v$(params.VERSION)"
+          value: "Update components to v$(params.VERSION)"
         - name: SECRET_NAME
           value: {{ .Values.global.gitHubInfraCommitSecret }}
       runAfter:
