@@ -17,4 +17,4 @@ global:
   gitHubCommitStatusSecret:
     name: github-commit-status-token
     key: token
-  gitHubInfraCommitSecret: github-commit-status-token
+  gitHubInfraCommitSecret: github-infra-commit

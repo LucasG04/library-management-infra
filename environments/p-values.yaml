@@ -10,8 +10,3 @@ global:
 
   restartDeploymentRbacName: rbac-restart-deployment
   configmapAccessRbacName: configmap-access
-
-  dockerConfigSecret: docker-hub-secret
-  gitHubCommitStatusSecret:
-    name: github-commit-status-token
-    key: token

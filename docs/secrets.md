@@ -23,6 +23,7 @@ kubectl create secret generic github-commit-status-token \
 
 ```sh
 kubectl create secret generic github-infra-commit \
-  --from-literal=token="MY_TOKEN"
+  --from-literal=username=lucasg04 \
+  --from-literal=password=MY_TOKEN \
   -n s-library
 ```
