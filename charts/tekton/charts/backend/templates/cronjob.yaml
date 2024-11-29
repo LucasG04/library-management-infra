@@ -93,7 +93,7 @@ spec:
                       log "INFO" "Triggering pipeline with data: ${_jsondata}"
 
                       # Trigger the pipeline
-                      response=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+                      response=$(curl -k -s -o /dev/null -w "%{http_code}" -X POST \
                           -H 'Content-Type: application/json' \
                           -d "${_jsondata}" "${EVENTLISTENER_SVC_URL}")
 
