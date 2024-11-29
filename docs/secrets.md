@@ -3,17 +3,15 @@
 ## Docker Hub
 
 ```sh
-kubectl create secret generic my-secret \
-  --from-literal=username=myuser \
-  --from-literal=password=mypassword \
+kubectl create secret generic docker-hub-secret \
+  --from-literal=username=lucasg04 \
+  --from-literal=password=MY_TOKEN \
   -n s-library
 ```
 
-## GitHub Commit Status Task
+## GitHub Commit Status
 
-To use the `github-commit-status` task, you need a Kubernetes secret containing a GitHub API token. This token must have permissions for the repository and commit status read & write access. The secret's name should be specified in the Helm values YAML file.
-
-You can create the secret using the following command:
+This token must have permission for commit status read & write access.
 
 ```sh
 kubectl create secret generic github-commit-status-token \
