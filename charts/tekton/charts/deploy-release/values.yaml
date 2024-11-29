@@ -1,7 +1,7 @@
 infraGitUrl: https://github.com/LucasG04/library-management-infra.git
 frontend:
   gitUrl: https://github.com/LucasG04/library-management-frontend.git
-  imageName: lucasG04/library-management-frontend
+  imageName: lucasg04/library-management-frontend
 backend:
   gitUrl: https://github.com/LucasG04/library-management-backend.git
-  imageName: lucasG04/library-management-backend
+  imageName: lucasg04/library-management-backend
