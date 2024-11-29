@@ -2,6 +2,8 @@ apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
   name: git-commit-push
+  labels:
+    {{- include "deploy-release.labels" . | nindent 4 }}
 spec:
   params:
     - name: URL
@@ -26,14 +28,14 @@ spec:
       env:
         - name: GIT_USERNAME
           valueFrom:
-          secretKeyRef:
-            name: $(params.SECRET_NAME)
-            key: username
+            secretKeyRef:
+              name: $(params.SECRET_NAME)
+              key: username
         - name: GIT_PASSWORD
           valueFrom:
-          secretKeyRef:
-            name: $(params.SECRET_NAME)
-            key: password
+            secretKeyRef:
+              name: $(params.SECRET_NAME)
+              key: password
       script: |
         #!/bin/sh
         git config --global user.email "tekton-ci@example.com"
