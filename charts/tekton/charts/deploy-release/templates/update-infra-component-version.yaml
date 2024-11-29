@@ -38,7 +38,7 @@ spec:
             exit 1
         fi
 
-        for component in $(params.COMPONENTS); do
+        for component in $(params.COMPONENTS[*]); do
           echo "Updating component $component to version $(params.VERSION)"
           update_yaml_value "$yaml_file" "global.$component.imageTag" "$(params.VERSION)"
         done
