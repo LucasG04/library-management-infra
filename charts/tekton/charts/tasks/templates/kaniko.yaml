@@ -19,8 +19,8 @@ spec:
     - name: source
       description: Holds the context and Dockerfile
   steps:
-    - name: build-and-push
-      image: gcr.io/kaniko-project/executor:latest
+    - name: create-docker-config
+      image: alpine
       env:
         - name: REGISTRY_USERNAME
           valueFrom:
@@ -32,18 +32,19 @@ spec:
             secretKeyRef:
               name: {{ .Values.global.dockerConfigSecret }}
               key: password
-      workingDir: $(workspaces.source.path)
       script: |
         #!/bin/sh
         set -e -x
 
-        AUTH=$(echo -n "${REGISTRY_USERNAME}:${REGISTRY_PASSWORD}" | base64)
-        echo '{"auths": {"https://index.docker.io/v1/": {"auth": "'$AUTH'}}}' > /kaniko/.docker/config.json
-
-        kaniko \
-          --dockerfile=$(workspaces.source.path)/$(params.CONTEXT)/Dockerfile \
-          --context=$(workspaces.source.path)/$(params.CONTEXT) \
-          --destination=$(params.IMAGE_NAME):$(params.IMAGE_TAG)
+        mkdir -p /kaniko/.docker
+        echo '{"auths": {"https://index.docker.io/v1/": {"auth": "'$(echo -n "${REGISTRY_USERNAME}:${REGISTRY_PASSWORD}" | base64)'"}}}' > /kaniko/.docker/config.json
+    - name: build-and-push
+      image: gcr.io/kaniko-project/executor:latest
+      workingDir: $(workspaces.source.path)
+      args:
+        - --dockerfile=$(workspaces.source.path)/$(params.CONTEXT)/Dockerfile
+        - --context=$(workspaces.source.path)/$(params.CONTEXT)
+        - --destination=$(params.IMAGE_NAME):$(params.IMAGE_TAG)
       # Ensure kaniko runs as root, "securityContext" is required for platforms like OpenShift.
       securityContext:
         runAsUser: 0
