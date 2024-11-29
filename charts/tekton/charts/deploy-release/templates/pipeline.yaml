@@ -15,6 +15,8 @@ spec:
     - name: IMAGE_TAG
       type: string
       description: The tag of the component image to deploy.
+  workspaces:
+    - name: source-pvc
   tasks:
     - name: skopeo-frontend
       when:
@@ -49,7 +51,7 @@ spec:
         name: git-clone
       workspaces:
         - name: source
-          workspace: source
+          workspace: source-pvc
     - name: update-version
       params:
         - name: COMPONENTS
@@ -63,7 +65,7 @@ spec:
         name: update-infra-component-version
       workspaces:
         - name: source
-          workspace: source
+          workspace: source-pvc
     - name: commit-push
       params:
         - name: URL
@@ -81,4 +83,4 @@ spec:
         name: git-commit-push
       workspaces:
         - name: source
-          workspace: source
+          workspace: source-pvc
