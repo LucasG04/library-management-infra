@@ -18,11 +18,6 @@ spec:
     - name: copy
       image: quay.io/skopeo/stable:latest
       env:
-        - name: SOURCE_IMAGE
-          value: $(params.SOURCE)
-        - name: DESTINATION_IMAGE
-          value: $(params.DESTINATION)
-      env:
         - name: REGISTRY_USERNAME
           valueFrom:
             secretKeyRef:
@@ -39,4 +34,4 @@ spec:
         skopeo copy \
           --src-creds "${REGISTRY_USERNAME}:${REGISTRY_PASSWORD}" \
           --dest-creds "${REGISTRY_USERNAME}:${REGISTRY_PASSWORD}" \
-          docker://$SOURCE_IMAGE docker://$DESTINATION_IMAGE
+          docker://$(params.SOURCE) docker://$(params.DESTINATION)
