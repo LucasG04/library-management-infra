@@ -37,7 +37,9 @@ spec:
               name: $(params.SECRET_NAME)
               key: password
       script: |
-        #!/bin/sh
+        #!/bin/bash
+        set +x
+
         git config --global user.email "tekton-ci@example.com"
         git config --global user.name "tekton-ci"
         
