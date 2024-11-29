@@ -20,7 +20,10 @@ spec:
   tasks:
     - name: skopeo-frontend
       when:
-        - cel: "'frontend' in '$(params.COMPONENTS[*])'"
+        - input: "frontend"
+          operator: in
+          values: ["$(params.COMPONENTS[*])"]
+        # - cel: "'frontend' in '$(params.COMPONENTS[*])'"
       params:
         - name: SOURCE
           value: {{ .Values.frontend.imageName }}:$(params.IMAGE_TAG)
@@ -31,7 +34,10 @@ spec:
         name: skopeo
     - name: skopeo-backend
       when:
-        - cel: "'backend' in '$(params.COMPONENTS[*])'"
+        - input: "backend"
+          operator: in
+          values: ["$(params.COMPONENTS[*])"]
+        # - cel: "'backend' in '$(params.COMPONENTS[*])'"
       params:
         - name: SOURCE
           value: {{ .Values.backend.imageName }}:$(params.IMAGE_TAG)
