@@ -1,0 +1,92 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name:  {{ include "deploy-release.name" . }}
+  labels:
+    {{- include "deploy-release.labels" . | nindent 4 }}
+spec:
+  params:
+    - name: COMPONENTS
+      type: array
+      description: Component to be released. 'frontend', 'backend'
+    - name: VERSION
+      type: string
+      description: Semantic Version, z.B. "0.11.2"
+    - name: IMAGE_TAG
+      type: string
+      description: The tag of the component image to deploy.
+  workspaces:
+    - name: source-pvc
+  tasks:
+    - name: skopeo-frontend
+      when:
+        - input: "frontend"
+          operator: in
+          values: ["$(params.COMPONENTS[*])"]
+        # - cel: "'frontend' in '$(params.COMPONENTS[*])'"
+      params:
+        - name: SOURCE
+          value: {{ .Values.frontend.imageName }}:$(params.IMAGE_TAG)
+        - name: DESTINATION
+          value: {{ .Values.frontend.imageName }}:$(params.VERSION)
+      taskRef:
+        kind: Task
+        name: skopeo
+    - name: skopeo-backend
+      when:
+        - input: "backend"
+          operator: in
+          values: ["$(params.COMPONENTS[*])"]
+        # - cel: "'backend' in '$(params.COMPONENTS[*])'"
+      params:
+        - name: SOURCE
+          value: {{ .Values.backend.imageName }}:$(params.IMAGE_TAG)
+        - name: DESTINATION
+          value: {{ .Values.backend.imageName }}:$(params.VERSION)
+      taskRef:
+        kind: Task
+        name: skopeo
+    - name: clone-infra
+      params:
+        - name: URL
+          value: {{ .Values.infraGitUrl }}
+        - name: BRANCH
+          value: main
+      taskRef:
+        kind: Task
+        name: git-clone
+      workspaces:
+        - name: source
+          workspace: source-pvc
+    - name: update-version
+      params:
+        - name: COMPONENTS
+          value: $(params.COMPONENTS[*])
+        - name: VERSION
+          value: $(params.VERSION)
+      runAfter:
+        - clone-infra
+      taskRef:
+        kind: Task
+        name: update-infra-component-version
+      workspaces:
+        - name: source
+          workspace: source-pvc
+    - name: commit-push
+      params:
+        - name: URL
+          value: {{ .Values.infraGitUrl }}
+        - name: BRANCH
+          value: main
+        - name: MESSAGE
+          value: "Update components to v$(params.VERSION)"
+        - name: SECRET_NAME
+          value: {{ .Values.global.gitHubInfraCommitSecret }}
+      runAfter:
+        - update-version
+      taskRef:
+        kind: Task
+        name: git-commit-push
+      workspaces:
+        - name: source
+          workspace: source-pvc

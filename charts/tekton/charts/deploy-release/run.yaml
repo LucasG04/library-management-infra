@@ -1,0 +1,26 @@
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  name: deploy-release-run
+  namespace: s-library
+spec:
+  pipelineRef:
+    name: deploy-release
+  params:
+    - name: COMPONENTS
+      value:
+        - frontend
+        - backend
+    - name: VERSION
+      value: "0.0.1"
+    - name: IMAGE_TAG
+      value: main
+  workspaces:
+    - name: source-pvc
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+            - ReadWriteMany
+          resources:
+            requests:
+              storage: 100Mi

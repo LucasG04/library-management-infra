@@ -1,0 +1,36 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: update-infra-component-version
+  labels:
+    {{- include "deploy-release.labels" . | nindent 4 }}
+spec:
+  params:
+    - name: COMPONENTS
+      type: array
+      description: List of components to update
+    - name: VERSION
+      type: string
+      description: Version to update the components to
+  workspaces:
+    - name: source
+      description: The workspace containing the source code
+  steps:
+    - name: update-version
+      image: linuxserver/yq:3.4.3
+      workingDir: $(workspaces.source.path)
+      args: ["$(params.COMPONENTS[*])"]
+      script: |
+        #!/bin/bash
+        values_file="./environments/p-values.yaml"
+
+        # Check if the YAML file exists
+        if [ ! -f "$values_file" ]; then
+            echo "File ${values_file} does not exist."
+            exit 1
+        fi
+
+        for component in ${@}; do
+          echo "Updating component $component to version $(params.VERSION)"
+          yq -Y --indentless --in-place '.global.'${component}'.imageTag = "$(params.VERSION)"' $values_file
+        done

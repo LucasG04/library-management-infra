@@ -1,0 +1,38 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: skopeo
+  labels:
+    {{- include "deploy-release.labels" . | nindent 4 }}
+spec:
+  description: >-
+    Copy an image (manifest, filesystem layers, signatures) from one location to another.
+  params:
+    - name: SOURCE
+      type: string
+      description: Image with tag to copy
+    - name: DESTINATION
+      type: string
+      description: Destination of copied image with image name and tag
+  steps:
+    - name: copy
+      image: quay.io/skopeo/stable:latest
+      env:
+        - name: REGISTRY_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.global.dockerConfigSecret }}
+              key: username
+        - name: REGISTRY_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.global.dockerConfigSecret }}
+              key: password
+      script: |
+        #!/bin/sh
+        set +x
+
+        skopeo copy \
+          --src-creds "${REGISTRY_USERNAME}:${REGISTRY_PASSWORD}" \
+          --dest-creds "${REGISTRY_USERNAME}:${REGISTRY_PASSWORD}" \
+          docker://$(params.SOURCE) docker://$(params.DESTINATION)
