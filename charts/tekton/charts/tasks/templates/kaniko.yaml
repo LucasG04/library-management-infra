@@ -28,8 +28,19 @@ spec:
         - name: secret-share
           mountPath: /kaniko/.docker
       workingDir: /kaniko/.docker
+      env:
+        - name: REGISTRY_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.global.dockerConfigSecret }}
+              key: username
+        - name: REGISTRY_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.global.dockerConfigSecret }}
+              key: password
       script: |
-        #!/bin/bash
+        #!/bin/sh
         set +x
         echo '{"auths": {"https://index.docker.io/v1/": {"auth": "'$(echo -n "${REGISTRY_USERNAME}:${REGISTRY_PASSWORD}" | base64)'"}}}' > ./config.json
     - name: build-and-push
