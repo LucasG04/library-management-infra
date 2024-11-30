@@ -18,28 +18,25 @@ spec:
   workspaces:
     - name: source
       description: Holds the context and Dockerfile
+  volumes:
+    - name: secret-share
+      emptyDir: {}
   steps:
     - name: create-docker-config
       image: alpine
-      env:
-        - name: REGISTRY_USERNAME
-          valueFrom:
-            secretKeyRef:
-              name: {{ .Values.global.dockerConfigSecret }}
-              key: username
-        - name: REGISTRY_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: {{ .Values.global.dockerConfigSecret }}
-              key: password
+      volumeMounts:
+        - name: secret-share
+          mountPath: /kaniko/.docker
+      workingDir: /kaniko/.docker
       script: |
         #!/bin/sh
-        set -e -x
-
-        mkdir -p /kaniko/.docker
-        echo '{"auths": {"https://index.docker.io/v1/": {"auth": "'$(echo -n "${REGISTRY_USERNAME}:${REGISTRY_PASSWORD}" | base64)'"}}}' > /kaniko/.docker/config.json
+        set -e +x
+        echo '{"auths": {"https://index.docker.io/v1/": {"auth": "'$(echo -n "${REGISTRY_USERNAME}:${REGISTRY_PASSWORD}" | base64)'"}}}' > ./config.json
     - name: build-and-push
       image: gcr.io/kaniko-project/executor:latest
+      volumeMounts:
+        - name: secret-share
+          mountPath: /kaniko/.docker
       workingDir: $(workspaces.source.path)
       args:
         - --dockerfile=$(workspaces.source.path)/$(params.CONTEXT)/Dockerfile
