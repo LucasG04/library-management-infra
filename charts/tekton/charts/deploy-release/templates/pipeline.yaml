@@ -57,19 +57,15 @@ spec:
           workspace: source-pvc
     - name: commit-push
       params:
-        - name: URL
-          value: {{ .Values.infraGitUrl }}
         - name: BRANCH
           value: main
         - name: MESSAGE
           value: "Update components to v$(params.VERSION)"
-        - name: SECRET_NAME
-          value: {{ .Values.global.gitHubInfraCommitSecret }}
       runAfter:
         - update-version
       taskRef:
         kind: Task
-        name: git-commit-push
+        name: git-infra-commit-push
       workspaces:
         - name: source
           workspace: source-pvc

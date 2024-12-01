@@ -1,23 +1,17 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: git-commit-push
+  name: git-infra-commit-push
   labels:
     {{- include "deploy-release.labels" . | nindent 4 }}
 spec:
   params:
-    - name: URL
-      type: string
-      description: The URL of the git repository
     - name: BRANCH
       type: string
-      description: The branch to push the commit to
+      description: The infra branch to push the commit to
     - name: MESSAGE
       type: string
       description: The commit message
-    - name: SECRET_NAME
-      type: string
-      description: The name of the Kubernetes secret containing the git credentials
   workspaces:
     - name: source
       description: The workspace containing the source code to commit and push
@@ -29,12 +23,12 @@ spec:
         - name: GIT_USERNAME
           valueFrom:
             secretKeyRef:
-              name: $(params.SECRET_NAME)
+              name: {{ .Values.global.gitHubInfraCommitSecret }}
               key: username
         - name: GIT_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: $(params.SECRET_NAME)
+              name: {{ .Values.global.gitHubInfraCommitSecret }}
               key: password
       script: |
         #!/bin/sh
@@ -44,7 +38,7 @@ spec:
         git config --global user.name "tekton-ci"
         
         # remove https from the URL
-        URL=$(echo $(params.URL) | sed 's/^https:\/\///')
+        URL=$(echo {{ .Values.infraGitUrl | quote }} | sed 's/^https:\/\///')
         git remote set-url origin https://$GIT_USERNAME:$GIT_PASSWORD@$URL
         
         git add .
