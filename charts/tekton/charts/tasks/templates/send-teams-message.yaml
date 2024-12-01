@@ -1,0 +1,48 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: send-teams-message
+spec:
+  description: >- 
+    Send a message to the Microsoft Teams channel that is configured with the webhook URL.
+  params:
+    - name: MESSAGE
+      type: string
+      description: The markdown message to be sent
+  steps:
+    - name: send-message
+      image: curlimages/curl:latest
+      env:
+        - name: WEBHOOK_URL
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.global.teamsWebhookUrlSecret }}
+              key: url
+      script: |
+        #!/bin/sh
+        PAYLOAD=$(cat <<EOF
+        {
+            "type":"message",
+            "attachments":[
+              {
+                  "contentType":"application/vnd.microsoft.card.adaptive",
+                  "contentUrl":null,
+                  "content":{
+                    "type": "AdaptiveCard",
+                    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+                    "version": "1.5",
+                    "body": [
+                      {
+                        "type": "TextBlock",
+                        "text": "${MESSAGE}",
+                        "wrap": true
+                      }
+                    ],
+                  }
+              }
+            ]
+        }
+        EOF
+        )
+
+        curl -X POST -H "Content-Type: application/json" -d "${PAYLOAD}" ${WEBHOOK_URL}

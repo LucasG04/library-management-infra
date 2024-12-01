@@ -27,3 +27,11 @@ kubectl create secret generic github-infra-commit \
   --from-literal=password=MY_TOKEN \
   -n s-library
 ```
+
+## Teams Webhook URL
+
+```sh
+kubectl create secret generic teams-notification-webhook-url \
+  --from-literal=url="WEBHOOK_URL" \
+  -n s-library
+```

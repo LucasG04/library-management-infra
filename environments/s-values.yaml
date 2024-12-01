@@ -18,3 +18,4 @@ global:
     name: github-commit-status-token
     key: token
   gitHubInfraCommitSecret: github-infra-commit
+  teamsWebhookUrlSecret: teams-notification-webhook-url
