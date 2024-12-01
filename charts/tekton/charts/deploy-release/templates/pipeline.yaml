@@ -57,8 +57,6 @@ spec:
           workspace: source-pvc
     - name: commit-push
       params:
-        - name: BRANCH
-          value: main
         - name: MESSAGE
           value: "Update components to v$(params.VERSION)"
       runAfter:

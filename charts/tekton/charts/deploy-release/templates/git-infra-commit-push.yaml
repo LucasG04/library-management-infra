@@ -6,9 +6,6 @@ metadata:
     {{- include "deploy-release.labels" . | nindent 4 }}
 spec:
   params:
-    - name: BRANCH
-      type: string
-      description: The infra branch to push the commit to
     - name: MESSAGE
       type: string
       description: The commit message
@@ -43,4 +40,4 @@ spec:
         
         git add .
         git commit -m "$(params.MESSAGE)"
-        git push origin $(params.BRANCH)
+        git push
