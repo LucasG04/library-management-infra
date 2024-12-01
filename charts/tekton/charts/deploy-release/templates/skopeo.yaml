@@ -8,15 +8,41 @@ spec:
   description: >-
     Copy an image (manifest, filesystem layers, signatures) from one location to another.
   params:
-    - name: SOURCE
+    - name: COMPONENTS
+      type: array
+      description: List of components to be copied. Image names will be derived from the values file.
+    - name: SOURCE_TAG
       type: string
-      description: Image with tag to copy
-    - name: DESTINATION
+      description: Image tag to copy
+    - name: DESTINATION_TAG
       type: string
-      description: Destination of copied image with image name and tag
+      description: Destination tag of copied image
+  volumes:
+    - name: result-share
+      emptyDir: {}
   steps:
+    - name: map-image-names
+      image: alpine
+      volumeMounts:
+        - name: result-share
+          mountPath: /tmp/image-names
+      args: ["$(params.COMPONENTS[*])"]
+      script: |
+        #!/bin/sh
+        set -e
+
+        for component in ${@}; do
+          if [[ "$component" == "frontend" ]]; then
+            echo "{{ .Values.frontend.imageName }}" >> /tmp/image-names/image-names.txt
+          elif [[ "$component" == "backend" ]]; then
+            echo "{{ .Values.backend.imageName }}" >> /tmp/image-names/image-names.txt
+          fi
+        done
     - name: copy
       image: quay.io/skopeo/stable:latest
+      volumeMounts:
+        - name: result-share
+          mountPath: /tmp/image-names
       env:
         - name: REGISTRY_USERNAME
           valueFrom:
@@ -32,7 +58,12 @@ spec:
         #!/bin/sh
         set +x
 
-        skopeo copy \
-          --src-creds "${REGISTRY_USERNAME}:${REGISTRY_PASSWORD}" \
-          --dest-creds "${REGISTRY_USERNAME}:${REGISTRY_PASSWORD}" \
-          docker://$(params.SOURCE) docker://$(params.DESTINATION)
+        IMAGE_NAMES=$(cat /tmp/image-names/image-names.txt)
+
+        for image in $IMAGE_NAMES; do
+          echo "Copying $image from $(params.SOURCE_TAG) to $(params.DESTINATION_TAG)"
+          skopeo copy \
+            --src-creds "${REGISTRY_USERNAME}:${REGISTRY_PASSWORD}" \
+            --dest-creds "${REGISTRY_USERNAME}:${REGISTRY_PASSWORD}" \
+            docker://$image:$(params.SOURCE_TAG) docker://$image:$(params.DESTINATION_TAG)
+        done
