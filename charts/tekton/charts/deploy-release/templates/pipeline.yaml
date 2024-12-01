@@ -18,31 +18,14 @@ spec:
   workspaces:
     - name: source-pvc
   tasks:
-    - name: skopeo-frontend
-      when:
-        - input: "frontend"
-          operator: in
-          values: ["$(params.COMPONENTS[*])"]
-        # - cel: "'frontend' in '$(params.COMPONENTS[*])'"
+    - name: copy-images
       params:
-        - name: SOURCE
-          value: {{ .Values.frontend.imageName }}:$(params.IMAGE_TAG)
-        - name: DESTINATION
-          value: {{ .Values.frontend.imageName }}:$(params.VERSION)
-      taskRef:
-        kind: Task
-        name: skopeo
-    - name: skopeo-backend
-      when:
-        - input: "backend"
-          operator: in
-          values: ["$(params.COMPONENTS[*])"]
-        # - cel: "'backend' in '$(params.COMPONENTS[*])'"
-      params:
-        - name: SOURCE
-          value: {{ .Values.backend.imageName }}:$(params.IMAGE_TAG)
-        - name: DESTINATION
-          value: {{ .Values.backend.imageName }}:$(params.VERSION)
+        - name: COMPONENTS
+          value: $(params.COMPONENTS[*])
+        - name: SOURCE_TAG
+          value: $(params.IMAGE_TAG)
+        - name: DESTINATION_TAG
+          value: $(params.VERSION)
       taskRef:
         kind: Task
         name: skopeo
