@@ -5,6 +5,5 @@ global:
   backend:
     imageTag: 0.0.1
     imagePullPolicy: IfNotPresent
-
   restartDeploymentRbacName: rbac-restart-deployment
   configmapAccessRbacName: configmap-access
