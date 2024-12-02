@@ -7,51 +7,37 @@ metadata:
     {{- include "tasks.labels" . | nindent 4 }}
 spec:
   description: >-
-    This task sets the CI job status on GitHub ("api.github.com") commits with a specified state.
+    This task sets the CI job status on GitHub ("api.github.com") commits with the given state.
   params:
   - name: REPO_FULL_NAME
-    description: |
-      The GitHub repository full name, e.g.: tektoncd/catalog
     type: string
-
+    description: "The GitHub repository full name, e.g.: octocat/hello-worId"
   - name: SHA
+    type: string
     description: Commit SHA to set the status for.
+  - name: STATE
+    description: The state of the status. `error` | `failure` | `pending` | `success`
     type: string
-
-  - name: GITHUB_TOKEN_SECRET_NAME
-    description: |
-      The name of the kubernetes secret that contains the GitHub token
+  - name: DESCRIPTION
     type: string
-
-  - name: GITHUB_TOKEN_SECRET_KEY
-    description: |
-      The key within the kubernetes secret that contains the GitHub token
+    description: A short description of the status.
+  - name: CONTEXT
     type: string
-
+    description: >-
+      The GitHub context, A string label to differentiate this status from
+      the status of other systems. ie: "ci/tekton"
   - name: TARGET_URL
-    description: |
+    type: string
+    description: >-
       The target URL to associate with this status. This URL will be linked
       from the GitHub UI to allow users to easily see the source of the
       status.
+  - name: GITHUB_TOKEN_SECRET_NAME
     type: string
-
-  - name: DESCRIPTION
-    description: A short description of the status.
+    description: The name of the kubernetes secret that contains the GitHub token
+  - name: GITHUB_TOKEN_SECRET_KEY
     type: string
-
-  - name: CONTEXT
-    description: |
-      The GitHub context, A string label to differentiate this status from
-      the status of other systems. ie: "ci/tekton"
-    default: "ci/tekton"
-    type: string
-
-  - name: STATE
-    description: |
-      The state of the status. Can be one of the following `error`,
-      `failure`, `pending`, or `success`.
-    type: string
-
+    description: The key within the kubernetes secret that contains the token
   steps:
     - name: set-status
       image: node:22
