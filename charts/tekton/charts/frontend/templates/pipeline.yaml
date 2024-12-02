@@ -35,10 +35,6 @@ spec:
           value: {{ .Values.repository.fullName }}
         - name: SHA
           value: $(tasks.clone-repo.results.CLONED_COMMIT_SHA)
-        - name: GITHUB_TOKEN_SECRET_NAME
-          value: {{ .Values.global.gitHubCommitStatusSecret.name }}
-        - name: GITHUB_TOKEN_SECRET_KEY
-          value: {{ .Values.global.gitHubCommitStatusSecret.key }}
         - name: TARGET_URL
           value: http://tekton/dashboard # placeholder
         - name: DESCRIPTION
@@ -128,10 +124,6 @@ spec:
           value: {{ .Values.repository.fullName }}
         - name: SHA
           value: $(tasks.clone-repo.results.CLONED_COMMIT_SHA)
-        - name: GITHUB_TOKEN_SECRET_NAME
-          value: {{ .Values.global.gitHubCommitStatusSecret.name }}
-        - name: GITHUB_TOKEN_SECRET_KEY
-          value: {{ .Values.global.gitHubCommitStatusSecret.key }}
         - name: TARGET_URL
           value: http://tekton/dashboard # placeholder
         - name: DESCRIPTION
@@ -150,10 +142,6 @@ spec:
           value: {{ .Values.repository.fullName }}
         - name: SHA
           value: $(tasks.clone-repo.results.CLONED_COMMIT_SHA)
-        - name: GITHUB_TOKEN_SECRET_NAME
-          value: {{ .Values.global.gitHubCommitStatusSecret.name }}
-        - name: GITHUB_TOKEN_SECRET_KEY
-          value: {{ .Values.global.gitHubCommitStatusSecret.key }}
         - name: TARGET_URL
           value: http://tekton/dashboard # placeholder
         - name: DESCRIPTION

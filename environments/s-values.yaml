@@ -14,8 +14,6 @@ global:
   configmapAccessRbacName: configmap-access
 
   dockerConfigSecret: docker-hub-secret
-  gitHubCommitStatusSecret:
-    name: github-commit-status-token
-    key: token
+  gitHubCommitStatusSecret: github-commit-status-token
   gitHubInfraCommitSecret: github-infra-commit
   teamsWebhookUrlSecret: teams-notification-webhook-url

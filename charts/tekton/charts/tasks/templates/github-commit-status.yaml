@@ -32,12 +32,6 @@ spec:
       The target URL to associate with this status. This URL will be linked
       from the GitHub UI to allow users to easily see the source of the
       status.
-  - name: GITHUB_TOKEN_SECRET_NAME
-    type: string
-    description: The name of the kubernetes secret that contains the GitHub token
-  - name: GITHUB_TOKEN_SECRET_KEY
-    type: string
-    description: The key within the kubernetes secret that contains the token
   steps:
     - name: set-status
       image: node:22
@@ -45,8 +39,8 @@ spec:
         - name: GITHUB_TOKEN
           valueFrom:
             secretKeyRef:
-              name: $(params.GITHUB_TOKEN_SECRET_NAME)
-              key: $(params.GITHUB_TOKEN_SECRET_KEY)
+              name: {{ .Values.global.gitHubCommitStatusSecret }}
+              key: token
       script: |
         #!/usr/bin/env node
 
