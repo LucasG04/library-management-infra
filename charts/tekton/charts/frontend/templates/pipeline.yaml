@@ -160,3 +160,28 @@ spec:
           value: "CI failure for $(context.pipelineRun.name)"
         - name: STATE
           value: failure
+    - name: teams-message-success
+      taskRef:
+        name: github-commit-status
+      when:
+        - input: "$(tasks.status)"
+          operator: notin
+          values: ["Failed"]
+      params:
+        - name: MESSAGE
+          value: |
+            ✅ CI success for $(context.pipelineRun.name)
+            - Commit: `$(tasks.clone-repo.results.CLONED_COMMIT_SHA)`
+    - name: teams-message-failed
+      taskRef:
+        name: github-commit-status
+      when:
+        - input: "$(tasks.status)"
+          operator: in
+          values: ["Failed"]
+      params:
+        - name: MESSAGE
+          value: |
+            ⛔️ CI failed for $(context.pipelineRun.name)
+            - Commit: `$(tasks.clone-repo.results.CLONED_COMMIT_SHA)`
+            - Error: $(tasks.status)
