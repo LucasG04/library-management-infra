@@ -1,9 +1,9 @@
 global:
   frontend:
-    imageTag: 0.0.2
+    imageTag: 0.0.3
     imagePullPolicy: IfNotPresent
   backend:
-    imageTag: 0.0.2
+    imageTag: 0.0.3
     imagePullPolicy: IfNotPresent
   restartDeploymentRbacName: rbac-restart-deployment
   configmapAccessRbacName: configmap-access
