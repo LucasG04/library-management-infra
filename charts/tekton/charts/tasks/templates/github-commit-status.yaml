@@ -26,6 +26,7 @@ spec:
     description: >-
       The GitHub context, A string label to differentiate this status from
       the status of other systems. ie: "ci/tekton"
+    default: "ci/tekton"
   - name: TARGET_URL
     type: string
     description: >-
