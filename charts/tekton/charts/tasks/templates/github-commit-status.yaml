@@ -34,7 +34,7 @@ spec:
       status.
   steps:
     - name: set-status
-      image: node:22
+      image: badouralix/curl-jq
       env:
         - name: GITHUB_TOKEN
           valueFrom:
@@ -42,65 +42,45 @@ spec:
               name: {{ .Values.global.gitHubCommitStatusSecret }}
               key: token
       script: |
-        #!/usr/bin/env node
+        #!/bin/sh
 
-        const https = require('https');
+        # Construct the status URL
+        STATUS_URL="https://api.github.com/repos/$(params.REPO_FULL_NAME)/statuses/$(params.SHA)"
 
-        // Construct the status URL
-        const statusUrl = `/repos/$(params.REPO_FULL_NAME)/statuses/$(params.SHA)`;
+        # Prepare the data payload
+        DATA=$(jq -n \
+          --arg state "$(params.STATE)" \
+          --arg target_url "$(params.TARGET_URL)" \
+          --arg description "$(params.DESCRIPTION)" \
+          --arg context "$(params.CONTEXT)" \
+          '{
+            state: $state,
+            target_url: $target_url,
+            description: $description,
+            context: $context
+          }')
 
-        // Prepare the data payload
-        const data = JSON.stringify({
-          state: "$(params.STATE)",
-          target_url: "$(params.TARGET_URL)",
-          description: "$(params.DESCRIPTION)",
-          context: "$(params.CONTEXT)"
-        });
+        echo "Body for API request: $DATA"
 
-        console.log("Body for API request:", data);
+        AUTH_HEADER="Authorization: Bearer $GITHUB_TOKEN"
 
-        // Set up the authorization header
-        const authHeader = `Bearer ${process.env.GITHUB_TOKEN}`;
+        # Send the request using curl
+        RESPONSE=$(curl -s -w "%{http_code}" -o response.json \
+          -X POST "$STATUS_URL" \
+          -H "Accept: application/vnd.github+json" \
+          -H "Content-Type: application/json" \
+          -H "$AUTH_HEADER" \
+          -H "User-Agent: Tekton CI" \
+          -d "$DATA")
 
-        // Configure the HTTPS request options
-        const options = {
-          hostname: "api.github.com",
-          port: 443,
-          path: statusUrl,
-          method: 'POST',
-          headers: {
-            'Authorization': authHeader,
-            'Accept': 'application/vnd.github+json',
-            'Content-Type': 'application/json',
-            'Content-Length': data.length,
-            'User-Agent': 'Tekton CI'
-          }
-        };
+        # Extract HTTP status code from the response
+        HTTP_STATUS=$(echo "$RESPONSE" | tail -n1)
 
-        // Make the HTTPS request
-        const req = https.request(options, (res) => {
-          let responseData = '';
-
-          res.on('data', (chunk) => {
-            responseData += chunk;
-          });
-
-          res.on('end', () => {
-            if (!String(res.statusCode).startsWith('2')) {
-              console.error(`Error: ${res.statusCode}`);
-              console.error(responseData);
-              process.exit(1);
-            } else {
-              console.log(`GitHub status '$(params.STATE)' has been set on $(params.REPO_FULL_NAME)#$(params.SHA)`);
-            }
-          });
-        });
-
-        req.on('error', (error) => {
-          console.error(error);
-          process.exit(1);
-        });
-
-        // Send the request with the data payload
-        req.write(data);
-        req.end();
+        # Check if the request was successful
+        if [ "${HTTP_STATUS}" -ge 200 ] && [ "${HTTP_STATUS}" -lt 300 ]; then
+          echo "GitHub status '$(params.STATE)' has been set on $(params.REPO_FULL_NAME)#$(params.SHA)"
+        else
+          echo "Error: $HTTP_STATUS"
+          cat response.json
+          exit 1
+        fi
