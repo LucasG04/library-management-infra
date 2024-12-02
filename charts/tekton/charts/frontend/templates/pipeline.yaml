@@ -162,7 +162,7 @@ spec:
           value: failure
     - name: teams-message-success
       taskRef:
-        name: github-commit-status
+        name: send-teams-message
       when:
         - input: "$(tasks.status)"
           operator: notin
@@ -174,7 +174,7 @@ spec:
             - Commit: `$(tasks.clone-repo.results.CLONED_COMMIT_SHA)`
     - name: teams-message-failed
       taskRef:
-        name: github-commit-status
+        name: send-teams-message
       when:
         - input: "$(tasks.status)"
           operator: in
