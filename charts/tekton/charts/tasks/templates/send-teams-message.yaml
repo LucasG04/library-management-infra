@@ -11,7 +11,7 @@ spec:
       description: The markdown message to be sent
   steps:
     - name: send-message
-      image: curlimages/curl:latest
+      image: badouralix/curl-jq
       env:
         - name: WEBHOOK_URL
           valueFrom:
@@ -20,29 +20,27 @@ spec:
               key: url
       script: |
         #!/bin/sh
-        PAYLOAD=$(cat <<EOF
-        {
-            "type":"message",
-            "attachments":[
+        PAYLOAD=$(jq -n \
+          --arg message "$(params.MESSAGE)" \
+          '{
+            "type": "message",
+            "attachments": [
               {
-                  "contentType":"application/vnd.microsoft.card.adaptive",
-                  "contentUrl":null,
-                  "content":{
-                    "type": "AdaptiveCard",
-                    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
-                    "version": "1.5",
-                    "body": [
-                      {
-                        "type": "TextBlock",
-                        "text": "${MESSAGE}",
-                        "wrap": true
-                      }
-                    ],
-                  }
+                "contentType": "application/vnd.microsoft.card.adaptive",
+                "contentUrl": null,
+                "content": {
+                  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+                  "type": "AdaptiveCard",
+                  "version": "1.2",
+                  "body": [
+                    {
+                      "type": "TextBlock",
+                      "text": $message
+                    }
+                  ]
+                }
               }
             ]
-        }
-        EOF
-        )
+          }')
 
         curl -X POST -H "Content-Type: application/json" -d "${PAYLOAD}" ${WEBHOOK_URL}
