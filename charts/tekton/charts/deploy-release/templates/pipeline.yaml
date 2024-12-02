@@ -67,3 +67,28 @@ spec:
       workspaces:
         - name: source
           workspace: source-pvc
+  finally:
+    - name: teams-message-success
+      taskRef:
+        name: send-teams-message
+      when:
+        - input: "$(tasks.status)"
+          operator: notin
+          values: ["Failed"]
+      params:
+        - name: MESSAGE
+          value: |
+            ✅ CD success for $(context.pipelineRun.name)
+            Update components to v$(params.VERSION)
+    - name: teams-message-failed
+      taskRef:
+        name: send-teams-message
+      when:
+        - input: "$(tasks.status)"
+          operator: in
+          values: ["Failed"]
+      params:
+        - name: MESSAGE
+          value: |
+            ⛔️ CD failed for $(context.pipelineRun.name)
+            Error: $(tasks.status)

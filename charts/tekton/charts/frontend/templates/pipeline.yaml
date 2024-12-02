@@ -171,7 +171,7 @@ spec:
         - name: MESSAGE
           value: |
             ✅ CI success for $(context.pipelineRun.name)
-            - Commit: `$(tasks.clone-repo.results.CLONED_COMMIT_SHA)`
+            - Commit: $(tasks.clone-repo.results.CLONED_COMMIT_SHA)
     - name: teams-message-failed
       taskRef:
         name: send-teams-message
@@ -183,5 +183,5 @@ spec:
         - name: MESSAGE
           value: |
             ⛔️ CI failed for $(context.pipelineRun.name)
-            - Commit: `$(tasks.clone-repo.results.CLONED_COMMIT_SHA)`
+            - Commit: $(tasks.clone-repo.results.CLONED_COMMIT_SHA)
             - Error: $(tasks.status)
