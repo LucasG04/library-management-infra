@@ -20,7 +20,8 @@ spec:
               key: url
       script: |
         #!/bin/sh
-        PAYLOAD=$(jq -n \
+
+        jq -n \
           --arg message "$(params.MESSAGE)" \
           '{
             "type": "message",
@@ -41,6 +42,6 @@ spec:
                 }
               }
             ]
-          }')
+          }' > "message.json"
 
-        curl -X POST -H "Content-Type: application/json" -d "${PAYLOAD}" ${WEBHOOK_URL}
+        curl -X POST -H 'Content-Type: application/json' -d @message.json ${WEBHOOK_URL}
